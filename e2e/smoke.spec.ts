@@ -7,7 +7,8 @@ test('map loads, selection works, scenario runs and resets exactly', async ({ pa
 
   await page.goto('/?intro=off');
   await expect(page.locator('.cesium-widget canvas')).toBeVisible();
-  await expect(page.getByText('MOCK MODE')).toBeVisible();
+  // The mode badge was removed from the top bar on request; the mode is shown in Settings.
+  await expect(page.getByText('MOCK MODE')).toHaveCount(0);
   // FR-01: the Cesium scene really renders frames.
   await expect.poll(() => page.evaluate(() => (document.querySelector('.cesium-widget canvas') as HTMLCanvasElement).width), { timeout: 20_000 }).toBeGreaterThan(0);
 
@@ -39,7 +40,7 @@ test('first visit shows the guided-demo start tile, which can be skipped', async
   await expect(page.getByRole('dialog', { name: /Monsoon squall meets/ })).toBeVisible();
   await page.getByRole('button', { name: /Start the guided demo/ }).click();
   const card = page.getByRole('region', { name: 'Guided demo' });
-  await expect(card.getByText('Mock Mode — every value says where it came from')).toBeVisible();
+  await expect(card.getByText('Every value says where it came from')).toBeVisible();
   await card.getByRole('button', { name: 'Next' }).click();
   await card.getByRole('button', { name: 'Select T2 for me' }).click();
   await expect(card.getByText('Select the Sahar Elevated Access Road')).toBeVisible({ timeout: 5_000 });

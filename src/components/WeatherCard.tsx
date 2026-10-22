@@ -25,12 +25,17 @@ export function WeatherCard({ env }: { env: DataEnvelope<WeatherRecord> }) {
         </div>
         <dl className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 text-right text-xs">
           <dt className="text-slate-400">Rainfall</dt>
-          <dd className={`tabular font-semibold ${heavy ? 'text-crit' : 'text-slate-100'}`}>{num(w.precipitationMmPerHour, 1)} mm/h</dd>
+          <dd className={`tabular font-semibold ${heavy ? 'text-crit' : 'text-slate-100'}`}>
+            {w.precipitationEstimated && <span title="Estimated from the METAR present-weather code — METARs do not report a rainfall rate">≈ </span>}
+            {num(w.precipitationMmPerHour, 1)} mm/h
+          </dd>
           <dt className="text-slate-400">Wind</dt>
-          <dd className="tabular text-slate-100">{num(w.windSpeedKmh)} km/h {compass(w.windDirectionDeg)}</dd>
+          <dd className="tabular text-slate-100">{num(w.windSpeedKmh)} km/h {Number.isFinite(w.windDirectionDeg) ? compass(w.windDirectionDeg) : 'VRB'}</dd>
+          {w.visibilityKm != null && (<><dt className="text-slate-400">Visibility</dt><dd className="tabular text-slate-100">{num(w.visibilityKm, 1)} km</dd></>)}
         </dl>
       </div>
-      <Freshness label={env.sourceLabel} observedAt={env.observedAt} quality={KIND_NOTE[w.kind]} />
+      {w.raw && <p className="mt-2 font-mono text-[10px] leading-snug break-words text-slate-400">{w.raw}</p>}
+      <Freshness label={env.sourceLabel} observedAt={env.observedAt} quality={w.precipitationEstimated ? `${KIND_NOTE[w.kind]}; rainfall rate estimated from the weather code` : KIND_NOTE[w.kind]} />
       {env.errorCode && <p className="mt-1 text-[10px] text-stale">Fallback: {env.errorCode}</p>}
     </Section>
   );

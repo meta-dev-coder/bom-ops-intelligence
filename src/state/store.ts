@@ -16,7 +16,7 @@ import { createScenarioRunner, INITIAL_MACHINE, reduceScenario, type ScenarioEve
 import type { BaselineInputs, OperationalState } from '../simulation/scenarioTypes';
 import type { AlertStatus, EventKind, EventLogEntry, RecommendationAlert } from '../types/alerts';
 import type { ScenarioResult } from '../types/scenarios';
-import type { ProviderHealth } from '../types/telemetry';
+import type { DataEnvelope, LiveAircraft, ProviderHealth } from '../types/telemetry';
 import { DATA_CONFIG } from '../config/dataSources';
 import { BASELINE_FIXTURE } from '../data/MockDataService';
 import { buildScenarioResult } from '../simulation/scenarioResult';
@@ -36,6 +36,8 @@ export interface AppState {
   /** Baseline snapshot taken when a scenario starts; live refreshes never move a running scenario. */
   frozenBaseline: BaselineInputs | null;
   providerHealth: ProviderHealth[];
+  /** Real mode only: live ADS-B positions (null in Simulation mode). */
+  liveAircraft: DataEnvelope<LiveAircraft[]> | null;
   assumptions: DemandPressureAssumptions;
   machine: ScenarioMachine;
   selectedEntityId: string | null;
@@ -58,6 +60,7 @@ export interface AppState {
   setDataMode(m: DataMode): void;
   setBaseline(b: BaselineInputs): void;
   setProviderHealth(h: ProviderHealth[]): void;
+  setLiveAircraft(a: DataEnvelope<LiveAircraft[]> | null): void;
   setAssumptions(a: DemandPressureAssumptions): void;
   select(id: string | null): void;
   hover(id: string | null): void;
@@ -161,6 +164,7 @@ export const useApp = create<AppState>((set, get) => {
     baseline: mockBaseline(),
     frozenBaseline: null,
     providerHealth: [],
+    liveAircraft: null,
     assumptions: DEFAULT_ASSUMPTIONS,
     machine: INITIAL_MACHINE,
     selectedEntityId: null,
@@ -185,13 +189,14 @@ export const useApp = create<AppState>((set, get) => {
     },
     setDataMode: mode => {
       if (!guard('dataMode.switch') || mode === get().dataMode) return;
-      if (mode === 'LIVE' && ENV.staticHosting) return; // no /api proxy on a static host
+      if (mode === 'LIVE' && !ENV.realDataAvailable) return; // no /api proxy on this static host
       doReset('Baseline restored because the data mode changed; scenario alert archived');
       set({ dataMode: mode, baseline: mode === 'MOCK' ? mockBaseline() : get().baseline });
       log('DATA_MODE_CHANGED', `Data mode → ${mode}`);
     },
     setBaseline: baseline => set({ baseline }),
     setProviderHealth: providerHealth => set({ providerHealth }),
+    setLiveAircraft: liveAircraft => set({ liveAircraft }),
     setAssumptions: a => {
       if (!guard('assumptions.edit')) return;
       set({ assumptions: a });
@@ -299,3 +304,6 @@ export function selectOperational(s: AppState): OperationalState {
 }
 
 export const useCan = (p: Permission) => useApp(s => can(s.role, p));
+
+/** Real mode with no scenario running: non-live values are presented as estimates, not SIMULATION. */
+export const useRealQuiet = () => useApp(s => s.dataMode === 'LIVE' && s.machine.phase === 'IDLE' && s.machine.stepIndex === 0);

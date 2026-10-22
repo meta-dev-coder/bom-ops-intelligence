@@ -9,5 +9,7 @@ interface ImportMetaEnv {
   readonly VITE_ION_IMAGERY_ASSET_ID?: string;
   /** 'true' on static hosts (GitHub Pages): there is no /api proxy, so LIVE mode is unavailable. */
   readonly VITE_STATIC_HOSTING?: string;
+  /** External /api proxy base for static hosting, e.g. https://bom-proxy.example.workers.dev/ */
+  readonly VITE_API_BASE?: string;
 }
 interface ImportMeta { readonly env: ImportMetaEnv }

@@ -1,0 +1,58 @@
+[
+ {
+  "icaoId": "VABB",
+  "receiptTime": "2026-10-22T15:15:14.356Z",
+  "obsTime": 1792681200,
+  "reportTime": "2026-10-22T15:00:00.000Z",
+  "temp": 32,
+  "dewp": 19,
+  "wdir": 360,
+  "wspd": 6,
+  "visib": 1.86,
+  "altim": 1011,
+  "qcField": 16,
+  "wxString": "FU",
+  "metarType": "METAR",
+  "rawOb": "METAR VABB 221500Z 36006KT 3000 FU SCT100 32/19 Q1011 NOSIG",
+  "lat": 19.1,
+  "lon": 72.859,
+  "elev": 14,
+  "name": "Mumbai/Shivaji Intl, MM, IN",
+  "cover": "SCT",
+  "clouds": [
+   {
+    "cover": "SCT",
+    "base": 10000
+   }
+  ],
+  "fltCat": "IFR"
+ },
+ {
+  "icaoId": "VABB",
+  "receiptTime": "2026-10-22T14:32:25.840Z",
+  "obsTime": 1792679400,
+  "reportTime": "2026-10-22T14:30:00.000Z",
+  "temp": 33,
+  "dewp": 19,
+  "wdir": 360,
+  "wspd": 5,
+  "visib": 1.86,
+  "altim": 1011,
+  "qcField": 16,
+  "wxString": "FU",
+  "metarType": "METAR",
+  "rawOb": "METAR VABB 221430Z 36005KT 3000 FU SCT100 33/19 Q1011 NOSIG",
+  "lat": 19.1,
+  "lon": 72.859,
+  "elev": 14,
+  "name": "Mumbai/Shivaji Intl, MM, IN",
+  "cover": "SCT",
+  "clouds": [
+   {
+    "cover": "SCT",
+    "base": 10000
+   }
+  ],
+  "fltCat": "IFR"
+ }
+]

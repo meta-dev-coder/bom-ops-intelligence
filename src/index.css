@@ -58,3 +58,7 @@ body { font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
 @keyframes tour-pulse { 50% { box-shadow: 0 0 0 2px #f59e0b, 0 0 0 10px rgb(245 158 11 / 0.08); } }
 [data-reduced-motion="true"] .tour-target { animation: none; }
 @media (prefers-reduced-motion: reduce) { .tour-target { animation: none; } }
+
+/* Real mode: estimate tags appear only while their card is hovered or focused. */
+.estimate-tag { opacity: 0; transition: opacity 120ms ease; }
+[data-hover-scope]:hover .estimate-tag, [data-hover-scope]:focus-within .estimate-tag { opacity: 1; }

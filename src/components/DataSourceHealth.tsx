@@ -12,6 +12,7 @@ export function DataSourceHealth() {
   const [open, setOpen] = useState(false);
   const layerIssues = Object.entries(layerStatus).filter(([, v]) => v?.state === 'error');
   return (
+    <div data-tour="data-sources">
     <Section
       title="Data sources"
       id="h-sources"
@@ -19,7 +20,7 @@ export function DataSourceHealth() {
     >
       <ul className="space-y-1">
         {health.map(p => (
-          <li key={p.providerId} className="text-xs">
+          <li key={p.providerId} data-hover-scope className="text-xs">
             <div className="flex items-center justify-between gap-2">
               <span className="truncate text-slate-300">{p.label}</span>
               <StatusTag state={p.state} />
@@ -41,5 +42,6 @@ export function DataSourceHealth() {
         </ul>
       )}
     </Section>
+    </div>
   );
 }

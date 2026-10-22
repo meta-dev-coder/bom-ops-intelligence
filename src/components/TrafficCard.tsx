@@ -1,6 +1,6 @@
 import { num } from '../app/format';
 import { ROAD_COLORS } from '../map/colors';
-import { useApp } from '../state/store';
+import { useApp, useRealQuiet } from '../state/store';
 import type { DataEnvelope, RoadStatus, TrafficSegment } from '../types/telemetry';
 import { Section } from './Panel';
 import { StatusTag } from './StatusTag';
@@ -18,6 +18,7 @@ export function travelTimeRatio(seg: TrafficSegment): number | null {
 export function TrafficCard({ segments }: { segments: DataEnvelope<TrafficSegment>[] }) {
   const select = useApp(s => s.select);
   const focus = useApp(s => s.focus);
+  const realQuiet = useRealQuiet();
   return (
     <Section title="Landside traffic" id="h-traffic">
       <ul className="space-y-2">
@@ -29,6 +30,7 @@ export function TrafficCard({ segments }: { segments: DataEnvelope<TrafficSegmen
               <button
                 type="button"
                 data-tour={t.id}
+                data-hover-scope
                 onClick={() => { select(t.id); focus(t.id); }}
                 className="w-full rounded-md border border-line bg-ink-850/60 p-2 text-left hover:border-accent/50"
               >
@@ -42,7 +44,9 @@ export function TrafficCard({ segments }: { segments: DataEnvelope<TrafficSegmen
                   <span className="tabular ml-auto text-slate-200">{num(t.currentSpeedKmh)} <span className="text-slate-400">/ {t.freeFlowSpeedKmh ?? '—'} km/h</span></span>
                 </div>
                 <div className="tabular mt-0.5 text-[10px] text-slate-500">
-                  Travel-time ratio {ttr == null ? '—' : `×${num(ttr, 1)}`} · {new Date(env.observedAt).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false })} IST · {env.sourceLabel}
+                  Travel-time ratio {ttr == null ? '—' : `×${num(ttr, 1)}`} · {realQuiet && env.state === 'SIMULATION'
+                    ? 'No live traffic feed configured — typical speed (estimate)'
+                    : `${new Date(env.observedAt).toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: '2-digit', minute: '2-digit', hour12: false })} IST · ${env.sourceLabel}`}
                 </div>
               </button>
             </li>

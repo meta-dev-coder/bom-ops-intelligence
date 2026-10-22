@@ -131,18 +131,22 @@ export function SettingsPanel() {
         <legend className="mb-1 text-[11px] font-semibold tracking-wide text-slate-400 uppercase">Data mode</legend>
         {(['MOCK', 'LIVE'] as const).map(m => (
           <label key={m} className="flex items-start gap-2 text-xs text-slate-200">
-            <input type="radio" name="mode" checked={dataMode === m} disabled={m === 'LIVE' && ENV.staticHosting} onChange={() => setDataMode(m)} className="mt-0.5" />
+            <input type="radio" name="mode" checked={dataMode === m} disabled={m === 'LIVE' && !ENV.realDataAvailable} onChange={() => setDataMode(m)} className="mt-0.5" />
             <span>
-              <strong>{m === 'MOCK' ? 'Mock Mode' : 'Live Data'}</strong>
+              <strong>{m === 'MOCK' ? 'Simulation' : 'Real data'}</strong>
               <span className="block text-[11px] text-slate-400">
-                {m === 'MOCK' ? 'Deterministic fixtures — presentation default.' : ENV.staticHosting ? 'Not available on this static deployment (no server proxy for provider keys).' : 'Weather & traffic via server proxy where licensed and configured; failures show STALE or fall back to SIMULATION.'}
+                {m === 'MOCK'
+                  ? 'Deterministic demo fixtures — repeatable presentation (all values tagged SIMULATION).'
+                  : !ENV.realDataAvailable
+                    ? 'Not available on this static deployment: real feeds need the /api proxy (set VITE_API_BASE).'
+                    : 'Live METAR weather, ADS-B aircraft, and roads/flights where keys are configured. Values without a live source are estimates (hover to see).'}
               </span>
             </span>
           </label>
         ))}
       </fieldset>
-      {!canSwitch && <p className="mt-1 text-[10px] text-slate-500">{roleLabel(role)} cannot change the data mode (Administrator / Demo Operator only).</p>}
-      {canSwitch && !scenarioIdle && <p className="mt-1 text-[10px] text-stale">Switching data mode resets the active scenario to baseline.</p>}
+      {!canSwitch && <p className="mt-1 text-[10px] text-slate-500">{roleLabel(role)} cannot change the mode (Administrator / Demo Operator only).</p>}
+      {canSwitch && !scenarioIdle && <p className="mt-1 text-[10px] text-stale">Switching mode resets the active scenario to baseline.</p>}
 
       <H>Display & notifications</H>
       <label className="flex items-center gap-2 text-xs text-slate-200">
@@ -159,7 +163,7 @@ export function SettingsPanel() {
       {canConfig && <AdminConfig />}
       {canDiag && <Diagnostics />}
 
-      <p className="mt-4 border-t border-line pt-2 font-mono text-[10px] text-slate-500">Build {ENV.buildLabel} · {dataMode === 'MOCK' ? 'MOCK MODE' : 'LIVE DATA'}</p>
+      <p className="mt-4 border-t border-line pt-2 font-mono text-[10px] text-slate-500">Build {ENV.buildLabel} · {dataMode === 'MOCK' ? 'Simulation mode' : 'Real data mode'}</p>
     </div>
   );
 }

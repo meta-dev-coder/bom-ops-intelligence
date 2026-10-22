@@ -28,6 +28,13 @@ The demo is commercial, so "free for non-commercial use" does not qualify.
 
 - **Flight schedules / FIDS for BOM:** AeroDataBox via API.market Pro ≈ US$7.50/month (5,000 units), commercial use permitted — the cheapest found.
 
+## Implemented (Real mode)
+
+- ✅ Weather: METAR VABB (aviationweather.gov) — `server/providers/metar.ts`
+- ✅ Aircraft: adsb.lol — `server/providers/adsbLol.ts`
+- ✅ Flights: AeroDataBox adapter ready — `server/providers/aerodatabox.ts`, needs `AERODATABOX_API_KEY`
+- ✅ Roads: TomTom adapter — needs `TOMTOM_API_KEY`
+
 ## Recommended stack for this PoC
 
 1. Weather → aviationweather.gov METAR for VABB (+ OpenWeather with attribution if forecasts are needed).

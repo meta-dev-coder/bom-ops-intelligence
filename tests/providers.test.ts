@@ -124,7 +124,7 @@ describe('/api handler under a sub-path base', () => {
     });
     const h = await call('/poc/api/health');
     expect(h.status).toBe(200);
-    expect(h.body.providers.length).toBe(1 + BASELINE_FIXTURE.traffic.length); // weather + one per road
+    expect(h.body.providers.length).toBe(3 + BASELINE_FIXTURE.traffic.length); // weather, aircraft, flights + one per road
     expect((await call('/poc/index.html')).next).toBe(true);
   });
 });

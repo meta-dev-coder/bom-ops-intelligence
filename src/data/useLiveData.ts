@@ -1,62 +1,75 @@
 /**
- * The one polling loop in the app (spec §13: no parallel polling in components). In MOCK mode it
- * does nothing and the health panel says so; in LIVE mode it refreshes via our /api proxy and
- * resolves every response through `resolveEnvelope`, so failures surface as STALE/SIMULATION.
+ * The one polling loop in the app (spec §13: no parallel polling in components). In Simulation
+ * mode it does nothing; in Real mode it refreshes weather, roads, flights and aircraft through the
+ * /api proxy and resolves every response through `resolveEnvelope`, so failures surface as
+ * STALE, or fall back to fixtures that the UI marks as estimates.
  */
 import { useEffect } from 'react';
 import { DATA_CONFIG } from '../config/dataSources';
+import { ENV } from '../config/environment';
 import { useApp } from '../state/store';
-import type { DataEnvelope, ProviderHealth, TrafficSegment, WeatherRecord } from '../types/telemetry';
+import type { DataEnvelope, FlightRecord, LiveAircraft, ProviderHealth, TrafficSegment, WeatherRecord } from '../types/telemetry';
 import { fetchEnvelope, resolveEnvelope } from './DataService';
-import { mockTraffic, mockWeather } from './MockDataService';
+import { mockFlights, mockTraffic, mockWeather } from './MockDataService';
 
-const apiUrl = (path: string) => `${import.meta.env.BASE_URL}api/${path}`;
+const apiUrl = (path: string) => `${ENV.apiBase}api/${path}`;
+const AIRCRAFT_REFRESH_S = 15;
 
+/** Sources with no real feed in this PoC; always shown as such. */
 const SYNTHETIC_SOURCES: ProviderHealth[] = [
-  { providerId: 'flights', label: 'Flight schedule', state: 'SIMULATION', note: 'Synthetic rows — no licensed schedule provider configured' },
-  { providerId: 'aircraft', label: 'Aircraft positions', state: 'SIMULATION', note: 'Deterministic synthetic tracks — OpenSky needs a commercial licence' },
-  { providerId: 'demand', label: 'Passenger / forecourt demand', state: 'SIMULATION', note: 'Synthetic aggregate model inputs only' },
+  { providerId: 'demand', label: 'Passenger / forecourt demand', state: 'SIMULATION', note: 'No public source — synthetic aggregate model inputs' },
+  { providerId: 'parking', label: 'Parking, stands, cab staging', state: 'SIMULATION', note: 'No public source — configured demo values' },
 ];
 
 export function mockHealth(): ProviderHealth[] {
   return [
-    { providerId: 'open-meteo', label: 'Weather (Open-Meteo)', state: 'SIMULATION', note: 'Mock Mode — provider not called' },
-    { providerId: 'tomtom', label: 'Traffic (TomTom)', state: 'SIMULATION', note: 'Mock Mode — provider not called' },
+    { providerId: 'weather', label: 'Weather', state: 'SIMULATION', note: 'Simulation mode — fixture' },
+    { providerId: 'traffic', label: 'Road traffic', state: 'SIMULATION', note: 'Simulation mode — fixture' },
+    { providerId: 'flights', label: 'Flight schedule', state: 'SIMULATION', note: 'Simulation mode — synthetic rows' },
+    { providerId: 'aircraft', label: 'Aircraft positions', state: 'SIMULATION', note: 'Simulation mode — deterministic tracks' },
     ...SYNTHETIC_SOURCES,
   ];
 }
+
+/** Real mode starts its data window now; fixture rows are re-timed relative to it. */
+const nowWindow = () => new Date(Math.floor(Date.now() / 60_000) * 60_000).toISOString();
 
 export function useLiveData() {
   const dataMode = useApp(s => s.dataMode);
   const refreshSeconds = useApp(s => s.settings.refreshSeconds);
 
   useEffect(() => {
-    const { setProviderHealth } = useApp.getState();
+    const { setProviderHealth, setLiveAircraft } = useApp.getState();
     if (dataMode === 'MOCK') {
       setProviderHealth(mockHealth());
+      setLiveAircraft(null);
       return;
     }
     const ctrl = new AbortController();
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const t = DATA_CONFIG.clientTimeoutMs;
 
     const refresh = async () => {
-      const state = useApp.getState();
-      const prev = state.baseline;
-      const [w, ...traffic] = await Promise.all([
-        fetchEnvelope<WeatherRecord>(apiUrl('weather'), DATA_CONFIG.clientTimeoutMs, ctrl.signal),
-        ...Object.keys(prev.traffic).map(id => fetchEnvelope<TrafficSegment>(apiUrl(`traffic/${id}`), DATA_CONFIG.clientTimeoutMs, ctrl.signal)),
+      const prev = useApp.getState().baseline;
+      const roadIds = Object.keys(prev.traffic);
+      const [w, f, ...roads] = await Promise.all([
+        fetchEnvelope<WeatherRecord>(apiUrl('weather'), t, ctrl.signal),
+        fetchEnvelope<FlightRecord[]>(apiUrl('flights'), t, ctrl.signal),
+        ...roadIds.map(id => fetchEnvelope<TrafficSegment>(apiUrl(`traffic/${id}`), t, ctrl.signal)),
       ]);
       if (ctrl.signal.aborted || useApp.getState().dataMode !== 'LIVE') return;
       const now = new Date();
       const fixturesTraffic = mockTraffic();
-      const weather = resolveEnvelope({ outcome: w, previous: prev.weather.state === 'SIMULATION' ? null : prev.weather, fixture: mockWeather(), now });
-      const trafficIds = Object.keys(prev.traffic);
-      const nextTraffic: Record<string, DataEnvelope<TrafficSegment>> = {};
-      trafficIds.forEach((id, i) => {
-        const p = prev.traffic[id];
-        nextTraffic[id] = resolveEnvelope({ outcome: traffic[i], previous: p.state === 'SIMULATION' ? null : p, fixture: fixturesTraffic[id], now });
+      const keep = <T,>(e: DataEnvelope<T>) => (e.state === 'SIMULATION' ? null : e);
+      const weather = resolveEnvelope({ outcome: w, previous: keep(prev.weather), fixture: mockWeather(), now });
+      const flights = resolveEnvelope({ outcome: f, previous: keep(prev.flights), fixture: mockFlights(), now });
+      const traffic: Record<string, DataEnvelope<TrafficSegment>> = {};
+      roadIds.forEach((id, i) => {
+        traffic[id] = resolveEnvelope({ outcome: roads[i], previous: keep(prev.traffic[id]), fixture: fixturesTraffic[id], now });
       });
-      useApp.getState().setBaseline({ ...prev, weather, traffic: nextTraffic });
+      // Live flights carry ETA offsets relative to the server's fetch time; fixtures are re-timed to now.
+      const windowStart = flights.state === 'SIMULATION' ? nowWindow() : flights.observedAt;
+      useApp.getState().setBaseline({ ...prev, windowStart, weather, traffic, flights });
 
       let serverHealth: ProviderHealth[] = [];
       try {
@@ -69,22 +82,37 @@ export function useLiveData() {
           lastSuccessAt: p.lastSuccessAt,
           lastAttemptAt: p.lastAttemptAt,
           error: p.error,
-          note: p.state === 'DISABLED' ? `${p.note} — using SIMULATION fixture` : p.state === 'UNAVAILABLE' ? 'No data yet — using SIMULATION fixture' : undefined,
+          note: p.state === 'DISABLED' ? `${p.note} — showing estimates` : p.state === 'UNAVAILABLE' ? 'No data yet — showing estimates' : undefined,
         }));
       } catch {
-        serverHealth = [{ providerId: 'proxy', label: 'Data proxy (/api)', state: 'UNAVAILABLE', error: 'Proxy unreachable — using fixtures' }];
+        serverHealth = [{ providerId: 'proxy', label: 'Data proxy (/api)', state: 'UNAVAILABLE', error: 'Proxy unreachable — showing estimates' }];
       }
       if (!ctrl.signal.aborted) useApp.getState().setProviderHealth([...serverHealth, ...SYNTHETIC_SOURCES]);
     };
 
-    const loop = async () => {
-      await refresh().catch(err => console.warn('[live-data] refresh failed', err));
-      if (!ctrl.signal.aborted) timer = setTimeout(loop, refreshSeconds * 1000);
+    const refreshAircraft = async () => {
+      const r = await fetchEnvelope<LiveAircraft[]>(apiUrl('aircraft'), t, ctrl.signal);
+      if (ctrl.signal.aborted || useApp.getState().dataMode !== 'LIVE') return;
+      const prev = useApp.getState().liveAircraft;
+      if (r.ok) setLiveAircraft(r.envelope);
+      else if (prev) setLiveAircraft({ ...prev, state: 'STALE', errorCode: r.error });
     };
-    void loop();
+
+    const every = (fn: () => Promise<void>, seconds: number) => {
+      const loop = async () => {
+        await fn().catch(err => console.warn('[live-data] refresh failed', err));
+        if (!ctrl.signal.aborted) timers.push(setTimeout(loop, seconds * 1000));
+      };
+      void loop();
+    };
+    // Re-time fixtures immediately so Real mode never shows the 18:30 demo window.
+    const b = useApp.getState().baseline;
+    useApp.getState().setBaseline({ ...b, windowStart: nowWindow() });
+    every(refresh, refreshSeconds);
+    every(refreshAircraft, AIRCRAFT_REFRESH_S);
     return () => {
       ctrl.abort();
-      clearTimeout(timer);
+      timers.forEach(clearTimeout);
     };
   }, [dataMode, refreshSeconds]);
 }

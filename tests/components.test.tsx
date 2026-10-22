@@ -160,3 +160,34 @@ describe('Guided demo start tile', () => {
     expect(localStorage.getItem('bom_demo_seen_v1')).toBe('1');
   });
 });
+
+describe('Real mode tagging', () => {
+  const real = () => act(() => useApp.setState({ dataMode: 'LIVE' }));
+
+  it('shows no SIMULATION tags; synthetic values carry a hover-only ESTIMATE tag', () => {
+    real();
+    select('terminal-t2');
+    const { container } = render(<EntityInspector />);
+    expect(container.textContent).not.toMatch(/SIMULATION/);
+    const tags = container.querySelectorAll('.estimate-tag');
+    expect(tags.length).toBeGreaterThan(0);
+    tags.forEach(t => expect(t.textContent).toBe('ESTIMATE'));
+    // Hover scope exists so the tag can be revealed.
+    expect(tags[0].closest('[data-hover-scope]')).toBeTruthy();
+  });
+
+  it('brings SIMULATION back while a scenario is running (scripted values)', () => {
+    real();
+    runToActive();
+    select('terminal-t2');
+    const { container } = render(<EntityInspector />);
+    expect(container.textContent).toMatch(/SIMULATION/);
+  });
+
+  it('keeps SIMULATION tags in Simulation mode', () => {
+    select('terminal-t2');
+    const { container } = render(<EntityInspector />);
+    expect(container.textContent).toMatch(/SIMULATION/);
+    expect(container.querySelector('.estimate-tag')).toBeNull();
+  });
+});

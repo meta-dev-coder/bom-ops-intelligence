@@ -68,6 +68,7 @@ export function installMap(container: HTMLElement) {
       s.assumptions !== prev.assumptions || s.layers !== prev.layers || s.reducedMotion !== prev.reducedMotion
     ) restyle(s);
     if (s.layers.aircraft !== prev.layers.aircraft) aircraft.setVisible(s.layers.aircraft);
+    if (s.liveAircraft !== prev.liveAircraft || s.dataMode !== prev.dataMode) aircraft.setLive(s.dataMode === 'LIVE', s.liveAircraft?.data ?? []);
     if (s.layers.buildings !== prev.layers.buildings) scene.setBuildingsVisible(s.layers.buildings);
     if (s.layers.photoreal !== prev.layers.photoreal) void scene.setPhotorealVisible(s.layers.photoreal);
     if (s.reducedMotion !== prev.reducedMotion) aircraft.setAnimating(!s.reducedMotion);

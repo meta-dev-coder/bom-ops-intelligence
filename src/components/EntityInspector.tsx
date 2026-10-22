@@ -8,7 +8,7 @@ import { SCENARIO_MONSOON } from '../data/MockDataService';
 import { ENTITY_BY_ID, ENTITY_NAMES } from '../map/EntityRegistry';
 import { describeAssumptions, describeBands } from '../simulation/demandPressure';
 import type { OperationalState, TerminalKpis } from '../simulation/scenarioTypes';
-import { useApp, useOperational } from '../state/store';
+import { useApp, useOperational, useRealQuiet } from '../state/store';
 import type { AirportEntity } from '../types/entities';
 import type { DataState } from '../types/telemetry';
 import { KpiCard } from './KpiCard';
@@ -31,11 +31,12 @@ function TerminalView({ e, k, kBase, op, scenarioActive }: { e: AirportEntity; k
   const assumptions = useApp(s => s.assumptions);
   const windowStart = useApp(s => (s.frozenBaseline ?? s.baseline).windowStart);
   const demandState: DataState = 'SIMULATION';
+  const simWord = useRealQuiet() ? 'model estimate' : 'SIMULATION';
   const isT2 = e.id === 'terminal-t2';
   const changed = scenarioActive && op.impactApplied && k.pressure.index !== kBase.pressure.index;
   const pressureDef = (
     <>
-      <strong>Demand Pressure Index (SIMULATION)</strong> — projected forecourt vehicle demand ÷ effective processing capacity over {assumptions.windowMinutes} min, scaled 0–100.
+      <strong>Demand Pressure Index ({simWord})</strong> — projected forecourt vehicle demand ÷ effective processing capacity over {assumptions.windowMinutes} min, scaled 0–100.
       Not a predicted queue time or capacity breach. Bands: {describeBands(assumptions)} (illustrative).
     </>
   );
@@ -119,7 +120,7 @@ function TerminalView({ e, k, kBase, op, scenarioActive }: { e: AirportEntity; k
         <Row k="Weather capacity factor" v={`×${num(k.pressure.weatherCapacityFactor, 2)}`} />
         <Row k="Effective capacity (window)" v={`${num(k.pressure.effectiveCapacityVehicles)} veh`} />
         <details className="mt-2 text-[11px] text-slate-400">
-          <summary className="cursor-pointer">Assumptions (SIMULATION)</summary>
+          <summary className="cursor-pointer">Assumptions ({simWord})</summary>
           <ul className="mt-1 list-disc space-y-0.5 pl-4">{describeAssumptions(assumptions).map(a => <li key={a}>{a}</li>)}</ul>
         </details>
       </Section>

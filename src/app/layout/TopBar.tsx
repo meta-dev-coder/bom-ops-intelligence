@@ -33,20 +33,13 @@ export function TopBar() {
         </div>
       </div>
 
-      <span
-        data-tour="mode-badge"
-        className={`ml-1 hidden items-center gap-1 rounded border px-2 py-0.5 text-[10px] font-bold tracking-wide sm:inline-flex ${dataMode === 'MOCK' ? 'border-sim/50 bg-sim/10 text-sim' : 'border-live/50 bg-live/10 text-live'}`}
-        title={ENV.buildLabel}
-      >
-        <span aria-hidden="true">{dataMode === 'MOCK' ? '◆' : '●'}</span>{dataMode === 'MOCK' ? 'MOCK MODE' : 'LIVE DATA'}
-      </span>
       <span className="hidden font-mono text-[10px] text-slate-500 xl:inline" title="Build">{ENV.buildLabel}</span>
       {phase !== 'IDLE' && <span className="hidden rounded border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 md:inline">SCENARIO {phase}</span>}
 
       <div className="ml-auto flex items-center gap-2">
         <div className="hidden text-right leading-tight md:block">
           <div className="tabular text-xs text-slate-200">{istTime(now)}</div>
-          <div className="text-[10px] text-slate-500">{dataMode === 'MOCK' ? `Data window ${istTime(windowStart)} · simulation` : 'Live refresh 60 s'}</div>
+          <div className="text-[10px] text-slate-500">{dataMode === 'MOCK' ? `Data window ${istTime(windowStart)}` : `Updated ${istTime(windowStart)}`}</div>
         </div>
         <label className="sr-only" htmlFor="role">Demo role</label>
         <select id="role" value={role} onChange={e => setRole(e.target.value as RoleId)} className="max-w-[9.5rem] rounded-md border border-line bg-ink-900 px-2 py-1.5 text-xs text-slate-100" title="Demo role selector — not production security">

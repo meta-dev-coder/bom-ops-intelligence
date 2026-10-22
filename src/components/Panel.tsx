@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 export function Section({ title, right, children, id }: { title: string; right?: ReactNode; children: ReactNode; id?: string }) {
   return (
-    <section aria-labelledby={id} className="border-b border-line px-3.5 py-3 last:border-b-0">
+    <section data-hover-scope aria-labelledby={id} className="border-b border-line px-3.5 py-3 last:border-b-0">
       <header className="mb-2 flex items-center justify-between gap-2">
         <h2 id={id} className="text-[11px] font-semibold tracking-[0.08em] text-slate-300 uppercase">{title}</h2>
         {right}

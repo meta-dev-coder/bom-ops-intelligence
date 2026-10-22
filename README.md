@@ -32,8 +32,21 @@ Without an ion token the app still runs (Esri imagery on a flat ellipsoid, no 3D
   Demand Pressure Index 42 (Moderate) → 86 (Severe), structured alert, exact reset.
 - **Alerts** — observation, impact, factors, suggested actions (never executed), assumptions,
   provenance; acknowledge / assign / note / resolve gated by a demo role selector.
-- **Data** — Mock Mode by default. LIVE mode calls Open-Meteo and TomTom through a same-origin
-  proxy (`server/`) with caching, timeouts, retry, and LIVE → STALE → SIMULATION fallback.
+- **Two modes** (Settings; no badge on screen):
+  - **Simulation** (default) — deterministic fixtures, every value tagged SIMULATION; used by the guided demo.
+  - **Real data** — live feeds through the `/api` proxy (`server/`), with caching, timeouts and
+    LIVE → STALE fallback:
+    | Feed | Source | Key |
+    |---|---|---|
+    | Weather | METAR VABB, aviationweather.gov (NOAA) — rainfall rate estimated from the weather code | none |
+    | Aircraft | adsb.lol live ADS-B within 40 nm (ODbL; credit on map), dead-reckoned between 15 s updates | none |
+    | Flights | AeroDataBox BOM arrivals (passengers estimated from aircraft category) | `AERODATABOX_API_KEY` |
+    | Roads | TomTom Traffic Flow | `TOMTOM_API_KEY` |
+    | Weather (alt.) | Open-Meteo, replaces METAR when set | `OPEN_METEO_API_KEY` |
+
+    In Real mode, values without a live source carry no tag; hovering their card reveals a neutral
+    **ESTIMATE** tag (screen readers always hear it). Running a scenario brings SIMULATION tags back
+    for the scripted values.
 
 - **Guided demo** — first visit shows a start tile (guided demo or skip); 6 steps following the
   spec's presenter script with "Do it for me" and Skip/Back/Next. Reopen via **Guide**; `?intro=off` skips it.
@@ -45,8 +58,10 @@ Without an ion token the app still runs (Esri imagery on a flat ellipsoid, no 3D
 
 GitHub Pages: https://meta-dev-coder.github.io/bom-ops-intelligence/ — built by
 `.github/workflows/pages.yml` on every push to `main` (static, Mock Mode only; the ion token comes
-from the `VITE_CESIUM_ION_TOKEN` Actions secret). LIVE mode needs the `/api` proxy, i.e. `npm run dev`
-/ `vite preview` or another Node host.
+from the `VITE_CESIUM_ION_TOKEN` Actions secret). Real mode needs the `/api` proxy (the providers
+don't allow browser CORS), so on Pages it is unavailable unless the build sets `VITE_API_BASE` to an
+external proxy (any Node host running `vite preview`, with `API_ALLOWED_ORIGIN=https://meta-dev-coder.github.io`).
+Locally: `npm run dev` → Settings → role *Developer / Demo Operator* or *System Administrator* → Real data.
 
 ## Docs
 

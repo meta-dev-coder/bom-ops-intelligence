@@ -1,5 +1,5 @@
 {
-  "$comment": "Illustrative demand-pressure model (spec §6.1). Every value here is a demo assumption, not validated airport data, and is shown in the UI's assumptions list.",
+  "$comment": "Illustrative demand-pressure model (spec \u00a76.1). Every value here is a demo assumption, not validated airport data, and is shown in the UI's assumptions list.",
   "version": "1.0.0",
   "windowMinutes": 30,
   "pickupShare": 0.4,
@@ -7,26 +7,79 @@
   "baselineVehiclesPerHour": 1400,
   "roadCapacityFloor": 0.5,
   "rainCapacityFactors": [
-    { "minMmPerHour": 0, "factor": 1.0 },
-    { "minMmPerHour": 2.5, "factor": 0.95 },
-    { "minMmPerHour": 10, "factor": 0.88 },
-    { "minMmPerHour": 35, "factor": 0.75 }
+    {
+      "minMmPerHour": 0,
+      "factor": 1.0
+    },
+    {
+      "minMmPerHour": 2.5,
+      "factor": 0.95
+    },
+    {
+      "minMmPerHour": 10,
+      "factor": 0.88
+    },
+    {
+      "minMmPerHour": 35,
+      "factor": 0.75
+    }
   ],
   "indexFullScaleRatio": 1.6,
   "baseServiceMinutes": 4,
   "bands": [
-    { "label": "Low", "minIndex": 0 },
-    { "label": "Moderate", "minIndex": 30 },
-    { "label": "High", "minIndex": 60 },
-    { "label": "Severe", "minIndex": 80 }
+    {
+      "label": "Low",
+      "minIndex": 0
+    },
+    {
+      "label": "Moderate",
+      "minIndex": 30
+    },
+    {
+      "label": "High",
+      "minIndex": 60
+    },
+    {
+      "label": "Severe",
+      "minIndex": 80
+    }
   ],
-  "bandSeverity": { "Low": "INFO", "Moderate": "INFO", "High": "WARNING", "Severe": "HIGH" },
+  "bandSeverity": {
+    "Low": "INFO",
+    "Moderate": "INFO",
+    "High": "WARNING",
+    "Severe": "HIGH"
+  },
   "alertMinBand": "High",
   "roadStatusBySpeedRatio": [
-    { "minRatio": 0.85, "status": "FREE_FLOW" },
-    { "minRatio": 0.6, "status": "MODERATE" },
-    { "minRatio": 0.35, "status": "HEAVY" },
-    { "minRatio": 0.15, "status": "SEVERE" },
-    { "minRatio": 0, "status": "BLOCKED" }
-  ]
+    {
+      "minRatio": 0.85,
+      "status": "FREE_FLOW"
+    },
+    {
+      "minRatio": 0.6,
+      "status": "MODERATE"
+    },
+    {
+      "minRatio": 0.35,
+      "status": "HEAVY"
+    },
+    {
+      "minRatio": 0.15,
+      "status": "SEVERE"
+    },
+    {
+      "minRatio": 0,
+      "status": "BLOCKED"
+    }
+  ],
+  "liveFlightAssumptions": {
+    "$comment": "Used only for real schedules, which carry no passenger counts: estimated passengers = seats by category \u00d7 load factor (an ESTIMATE).",
+    "seatsByCategory": {
+      "WIDEBODY": 300,
+      "NARROWBODY": 180,
+      "REGIONAL": 72
+    },
+    "loadFactor": 0.85
+  }
 }

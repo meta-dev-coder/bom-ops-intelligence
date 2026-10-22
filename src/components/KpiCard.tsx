@@ -19,7 +19,7 @@ const TONE = { default: 'text-white', ok: 'text-live', warn: 'text-warn', crit: 
 /** Every KPI shows unit, state tag and a definition (FR-04). */
 export function KpiCard({ label, value, unit, state, definition, sub, tone = 'default', baseline }: KpiCardProps) {
   return (
-    <div className="rounded-lg border border-line bg-ink-850/70 p-2.5">
+    <div data-hover-scope className="rounded-lg border border-line bg-ink-850/70 p-2.5">
       <div className="flex items-start justify-between gap-2">
         <span className="text-[11px] leading-tight font-medium text-slate-400">{label}</span>
         <span className="flex shrink-0 items-center gap-1.5">

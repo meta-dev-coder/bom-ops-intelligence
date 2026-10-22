@@ -83,6 +83,7 @@ export function AlertCenter() {
   return (
     <section
       aria-label="Active recommendation"
+      data-hover-scope
       role="region"
       className="alert-enter glass pointer-events-auto absolute right-3 bottom-3 left-3 z-[25] mx-auto max-w-3xl rounded-xl shadow-2xl lg:right-[25rem] lg:left-[22rem]"
     >

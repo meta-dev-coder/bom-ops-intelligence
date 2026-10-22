@@ -33,9 +33,9 @@ export interface DemoSnapshot {
 
 export const DEMO_STEPS: DemoStep[] = [
   {
-    id: 'mode', label: 'Data state', target: 'mode-badge',
-    title: 'Mock Mode — every value says where it came from',
-    body: 'The demo runs on a fixed, synthetic evening-peak slice so it is identical every time. Each panel carries a tag: LIVE (green), STALE (amber) or SIMULATION (violet). Nothing here is presented as actual airport telemetry.',
+    id: 'mode', label: 'Data state', target: 'data-sources',
+    title: 'Every value says where it came from',
+    body: 'The guided demo runs in Simulation mode on a fixed evening-peak slice, so it is identical every time. Each panel carries a tag: LIVE (green), STALE (amber) or SIMULATION (violet); the Data sources panel lists every feed. Real mode (Settings) switches to live weather and aircraft.',
   },
   {
     id: 't2', label: 'Terminal 2', target: 'terminal-t2',

@@ -14,7 +14,9 @@ export function FlightBoard({ env, windowStart, highlightTerminal }: { env: Data
     <Section
       title="Upcoming arrivals"
       id="h-flights"
-      right={<span className="flex items-center gap-1.5"><StatusTag state={env.state} /><InfoTip>Synthetic demo rows (flight numbers prefixed DEMO). Not an actual schedule. Passengers = seats × assumed load factor.</InfoTip></span>}
+      right={<span className="flex items-center gap-1.5"><StatusTag state={env.state} /><InfoTip>{env.state === 'SIMULATION'
+        ? 'Synthetic demo rows (flight numbers prefixed DEMO). Not an actual schedule. Passengers = seats × assumed load factor.'
+        : `${env.quality}. Passenger counts are estimates: schedules do not include them.`}</InfoTip></span>}
     >
       <table className="w-full text-xs">
         <caption className="sr-only">Top five upcoming synthetic arrivals</caption>
@@ -29,11 +31,11 @@ export function FlightBoard({ env, windowStart, highlightTerminal }: { env: Data
             <tr key={f.id} className={`border-t border-line/60 ${highlightTerminal === f.terminalId ? 'bg-accent/5' : ''}`}>
               <td className="py-1">
                 <div className="font-mono text-[11px] text-slate-100">{f.flightNumber}</div>
-                <div className="text-[10px] text-slate-500">{CAT[f.aircraftCategory]} · {ENTITY_NAMES[f.terminalId]?.replace('Terminal ', 'T')}</div>
+                <div className="text-[10px] text-slate-500">{f.aircraftModel ?? CAT[f.aircraftCategory]} · {ENTITY_NAMES[f.terminalId]?.replace('Terminal ', 'T') ?? 'T?'}{f.status ? ` · ${f.status}` : ''}</div>
               </td>
               <td className="py-1 text-slate-300">{f.origin ?? '—'}</td>
               <td className="tabular py-1 text-slate-300">{etaFrom(windowStart, f.etaOffsetMinutes).replace(' IST', '')}</td>
-              <td className="tabular py-1 text-right text-slate-100">{num(estimatedPassengers(f))}<span className="text-slate-500">/{f.seatsAssumed}</span></td>
+              <td className="tabular py-1 text-right text-slate-100" title="Estimated: seats × assumed load factor">{env.state !== 'SIMULATION' && '≈'}{num(estimatedPassengers(f))}<span className="text-slate-500">/{f.seatsAssumed}</span></td>
             </tr>
           ))}
         </tbody>

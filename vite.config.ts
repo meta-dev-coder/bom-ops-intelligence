@@ -34,7 +34,9 @@ export default defineConfig(({ mode }) => {
       apiPlugin({
         TOMTOM_API_KEY: env.TOMTOM_API_KEY,
         OPEN_METEO_API_KEY: env.OPEN_METEO_API_KEY,
-        OPEN_METEO_ALLOW_FREE: env.OPEN_METEO_ALLOW_FREE,
+        AERODATABOX_API_KEY: env.AERODATABOX_API_KEY,
+        AERODATABOX_VIA: env.AERODATABOX_VIA,
+        API_ALLOWED_ORIGIN: env.API_ALLOWED_ORIGIN,
       }),
     ],
     build: { target: 'esnext', chunkSizeWarningLimit: 6000 },

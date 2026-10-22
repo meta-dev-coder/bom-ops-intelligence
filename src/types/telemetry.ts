@@ -26,6 +26,28 @@ export interface WeatherRecord {
   condition: string;
   /** OBSERVATION from a station, MODEL for a nowcast/forecast, SCRIPTED for a scenario value. */
   kind: 'OBSERVATION' | 'MODEL' | 'FIXTURE' | 'SCRIPTED';
+  /** True when the rainfall rate is inferred (e.g. from a METAR intensity code), not measured. */
+  precipitationEstimated?: boolean;
+  visibilityKm?: number;
+  /** Raw source report, e.g. the METAR text. */
+  raw?: string;
+}
+
+/** One live ADS-B position (adsb.lol). */
+export interface LiveAircraft {
+  hex: string;
+  callsign?: string;
+  registration?: string;
+  typeCode?: string;
+  lat: number;
+  lon: number;
+  /** Barometric altitude in feet; 0 when on the ground. */
+  altitudeFt: number;
+  onGround: boolean;
+  groundSpeedKt?: number;
+  trackDeg?: number;
+  /** Seconds since the position was received by the network, at fetch time. */
+  positionAgeS: number;
 }
 
 export type RoadStatus = 'FREE_FLOW' | 'MODERATE' | 'HEAVY' | 'SEVERE' | 'BLOCKED';
@@ -52,6 +74,11 @@ export interface FlightRecord {
   etaOffsetMinutes: number;
   seatsAssumed: number;
   loadFactorAssumed: number;
+  /** Live schedule fields (absent for synthetic rows). */
+  status?: string;
+  aircraftModel?: string;
+  scheduledAt?: string;
+  expectedAt?: string;
 }
 
 export interface ProviderHealth {
