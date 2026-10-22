@@ -38,10 +38,19 @@ const AIRPORT = { lat: 19.0896, lon: 72.8656 };
 // Every road in the baseline fixture can be served live (TomTom) when a key is configured.
 const liveSegments = (baseline: { traffic: { id: string }[] }) => baseline.traffic.map(t => t.id);
 
-export function createApi(env: ApiEnv, root: string, base = '/') {
-  const geo = JSON.parse(readFileSync(`${root}/src/data/fixtures/bom-entities.geojson`, 'utf8'));
-  const baseline = JSON.parse(readFileSync(`${root}/src/data/fixtures/bom-baseline.json`, 'utf8'));
-  const model = JSON.parse(readFileSync(`${root}/src/config/model.json`, 'utf8'));
+/** The three data files the proxy needs, as JSON text (from the source tree or a release's data/). */
+export interface ApiFiles { entities: string; baseline: string; model: string }
+
+export const sourceTreeFiles = (root: string): ApiFiles => ({
+  entities: readFileSync(`${root}/src/data/fixtures/bom-entities.geojson`, 'utf8'),
+  baseline: readFileSync(`${root}/src/data/fixtures/bom-baseline.json`, 'utf8'),
+  model: readFileSync(`${root}/src/config/model.json`, 'utf8'),
+});
+
+export function createApi(env: ApiEnv, files: ApiFiles, base = '/') {
+  const geo = JSON.parse(files.entities);
+  const baseline = JSON.parse(files.baseline);
+  const model = JSON.parse(files.model);
   const lengthById: Record<string, number> = Object.fromEntries(baseline.traffic.map((t: any) => [t.id, t.lengthM]));
 
   // METAR (keyless, public-domain US-government data) by default; a licensed Open-Meteo key overrides it.
@@ -53,8 +62,9 @@ export function createApi(env: ApiEnv, root: string, base = '/') {
       })
     : createProviderService({
         providerId: 'metar', label: 'Weather — METAR VABB (aviationweather.gov)', enabled: true,
-        // METARs are issued every 30 min; poll gently and treat > 75 min as stale.
-        refreshSeconds: 300, staleAfterSeconds: 75 * 60, timeoutMs: 8000,
+        // METARs are issued every 30 min and can reach the feed ~15 min late; poll every 5 min and
+        // treat > 90 min (one missed report plus lag) as stale.
+        refreshSeconds: 300, staleAfterSeconds: 90 * 60, timeoutMs: 8000,
         fetcher: createMetarFetcher(),
       });
 
@@ -132,7 +142,7 @@ export function apiPlugin(env: ApiEnv): Plugin {
   let handler: ReturnType<typeof createApi>;
   return {
     name: 'bom-api',
-    configResolved(cfg) { handler = createApi(env, cfg.root, cfg.base); },
+    configResolved(cfg) { handler = createApi(env, sourceTreeFiles(cfg.root), cfg.base); },
     configureServer(server) { server.middlewares.use((req, res, next) => void handler(req, res, next)); },
     configurePreviewServer(server) { server.middlewares.use((req, res, next) => void handler(req, res, next)); },
   };

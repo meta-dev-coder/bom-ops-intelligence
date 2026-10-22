@@ -61,6 +61,7 @@ GitHub Pages: https://meta-dev-coder.github.io/bom-ops-intelligence/ — built b
 from the `VITE_CESIUM_ION_TOKEN` Actions secret). Real mode needs the `/api` proxy (the providers
 don't allow browser CORS), so on Pages it is unavailable unless the build sets `VITE_API_BASE` to an
 external proxy (any Node host running `vite preview`, with `API_ALLOWED_ORIGIN=https://meta-dev-coder.github.io`).
+EC2 (Real mode, password-protected): see [`deploy/ec2/README.md`](deploy/ec2/README.md).
 Locally: `npm run dev` → Settings → role *Developer / Demo Operator* or *System Administrator* → Real data.
 
 ## Docs

@@ -116,8 +116,8 @@ describe('review regressions', () => {
 
 describe('/api handler under a sub-path base', () => {
   it('serves /poc/api/health and still passes non-api paths through', async () => {
-    const { createApi } = await import('../server/apiPlugin');
-    const handle = createApi({}, process.cwd(), '/poc/');
+    const { createApi, sourceTreeFiles } = await import('../server/apiPlugin');
+    const handle = createApi({}, sourceTreeFiles(process.cwd()), '/poc/');
     const call = (url: string) => new Promise<{ status: number; body?: any; next: boolean }>(resolve => {
       const res: any = { headers: {}, setHeader() {}, end(b: string) { resolve({ status: res.statusCode, body: JSON.parse(b), next: false }); } };
       void handle({ url, method: 'GET' } as any, res, () => resolve({ status: 0, next: true }));

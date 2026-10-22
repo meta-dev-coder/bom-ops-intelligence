@@ -6,3 +6,5 @@ dist/
 tools/.osm_cache.json
 test-results/
 playwright-report/
+build/
+releases/

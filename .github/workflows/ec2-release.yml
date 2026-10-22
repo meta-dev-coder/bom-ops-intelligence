@@ -1,0 +1,41 @@
+name: EC2 release
+
+# Builds the self-contained EC2 release (web app + /api server) and publishes it as a GitHub
+# Release. The instance pulls it with: sudo /opt/bom-ops/bomops.sh update latest
+on:
+  workflow_dispatch:
+  push:
+    tags: ['ec2-*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - name: Decide tag
+        id: tag
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/ec2-* ]]; then echo "tag=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT";
+          else echo "tag=ec2-$(date -u +%Y%m%d-%H%M)" >> "$GITHUB_OUTPUT"; fi
+      - name: Build release
+        run: node tools/build-ec2-release.mjs "${{ steps.tag.outputs.tag }}"
+        env:
+          GITHUB_SHA: ${{ github.sha }}
+          # Public browser key (also in the Pages bundle); restricted in Cesium ion.
+          VITE_CESIUM_ION_TOKEN: ${{ secrets.VITE_CESIUM_ION_TOKEN }}
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          T="${{ steps.tag.outputs.tag }}"
+          gh release create "$T" "releases/bom-ops-$T.tar.gz" "releases/bom-ops-$T.tar.gz.sha256" \
+            --title "EC2 release $T" --notes "Self-contained EC2 release (web + /api). Install: see deploy/ec2/README.md" --target "$GITHUB_SHA"

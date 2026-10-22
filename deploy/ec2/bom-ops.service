@@ -1,0 +1,25 @@
+[Unit]
+Description=BOM Operations Intelligence PoC (web + /api proxy)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bomops
+Group=bomops
+EnvironmentFile=/etc/bom-ops/env
+WorkingDirectory=/opt/bom-ops/current
+ExecStart=/opt/bom-ops/bin/node /opt/bom-ops/current/server.mjs
+Restart=on-failure
+RestartSec=30
+# Shared host: keep this service small and contained.
+MemoryMax=384M
+CPUQuota=40%
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadOnlyPaths=/opt/bom-ops
+
+[Install]
+WantedBy=multi-user.target
