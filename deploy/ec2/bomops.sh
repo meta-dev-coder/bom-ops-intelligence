@@ -1,24 +1,30 @@
 #!/usr/bin/env bash
-# Operate bom-ops. Releases come from GitHub Releases of the public repo (no AWS credentials needed).
+# Operate bom-ops. Releases come from S3 via the instance role when BOM_RELEASE_S3 is set in
+# /etc/bom-ops/env (s3://bucket/prefix with a `latest` file), otherwise from GitHub Releases.
 #   bomops.sh update [latest|<tag>]   download, verify sha256, switch atomically, restart (keeps 3)
 #   bomops.sh rollback | status | logs | start | stop | restart | uninstall [-y]
 set -euo pipefail
 REPO="meta-dev-coder/bom-ops-intelligence"
 BASE=/opt/bom-ops
 PORT="$(grep -E '^BOM_HTTP_PORT=' /etc/bom-ops/env 2>/dev/null | tail -1 | cut -d= -f2)"; PORT="${PORT:-8096}"
+S3="$(grep -E '^BOM_RELEASE_S3=' /etc/bom-ops/env 2>/dev/null | tail -1 | cut -d= -f2-)"; S3="${S3%/}"
 need_root() { [ "$(id -u)" = 0 ] || { echo "run with sudo"; exit 1; }; }
 
 case "${1:-status}" in
   update)
     need_root
     TAG="${2:-latest}"
-    if [ "$TAG" = latest ]; then
-      TAG="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | "$BASE/bin/node" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).tag_name))')"
-    fi
     TMP="$(mktemp -d)"; trap 'rm -rf "$TMP"' EXIT
-    URL="https://github.com/$REPO/releases/download/$TAG"
-    curl -fsSL "$URL/bom-ops-$TAG.tar.gz" -o "$TMP/r.tar.gz"
-    curl -fsSL "$URL/bom-ops-$TAG.tar.gz.sha256" -o "$TMP/r.sha256"
+    if [ -n "$S3" ]; then
+      [ "$TAG" = latest ] && TAG="$(aws s3 cp "$S3/latest" - | tr -d '[:space:]')"
+      aws s3 cp "$S3/bom-ops-$TAG.tar.gz" "$TMP/r.tar.gz" >/dev/null
+      aws s3 cp "$S3/bom-ops-$TAG.tar.gz.sha256" "$TMP/r.sha256" >/dev/null
+    else
+      [ "$TAG" = latest ] && TAG="$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | "$BASE/bin/node" -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(JSON.parse(s).tag_name))')"
+      URL="https://github.com/$REPO/releases/download/$TAG"
+      curl -fsSL "$URL/bom-ops-$TAG.tar.gz" -o "$TMP/r.tar.gz"
+      curl -fsSL "$URL/bom-ops-$TAG.tar.gz.sha256" -o "$TMP/r.sha256"
+    fi
     [ "$(sha256sum "$TMP/r.tar.gz" | cut -d' ' -f1)" = "$(cut -d' ' -f1 "$TMP/r.sha256")" ] || { echo "checksum mismatch"; exit 1; }
     mkdir -p "$BASE/releases/$TAG.new" && tar -xzf "$TMP/r.tar.gz" -C "$BASE/releases/$TAG.new"
     rm -rf "$BASE/releases/$TAG" && mv "$BASE/releases/$TAG.new" "$BASE/releases/$TAG"

@@ -10,8 +10,16 @@ NODE_VERSION="v22.23.2"
 id bomops >/dev/null 2>&1 || useradd --system --home /opt/bom-ops --shell /usr/sbin/nologin bomops
 mkdir -p /opt/bom-ops/releases /opt/bom-ops/bin /etc/bom-ops
 
-# Own Node (system Node on this host is too old; never touch /usr/bin/node or /opt/live-dc).
-if [ ! -x /opt/bom-ops/bin/node ]; then
+# Own Node copy (system Node on this host is too old). An existing Node >= 22 binary — e.g. the one
+# acs-demo installed at /opt/live-dc/bin/node — is COPIED (never linked or modified); otherwise the
+# official tarball is downloaded and checksum-verified.
+node_ok() { [ -x "$1" ] && "$1" -e 'process.exit(Number(process.versions.node.split(".")[0])>=22?0:1)' 2>/dev/null; }
+if ! node_ok /opt/bom-ops/bin/node; then
+  for c in "${BOM_NODE:-}" /opt/live-dc/bin/node "$(command -v node || true)"; do
+    if [ -n "$c" ] && node_ok "$c"; then install -m 755 "$(readlink -f "$c")" /opt/bom-ops/bin/node; break; fi
+  done
+fi
+if ! node_ok /opt/bom-ops/bin/node; then
   case "$(uname -m)" in x86_64) ARCH=x64 ;; aarch64) ARCH=arm64 ;; *) echo "unsupported arch"; exit 1 ;; esac
   TMP="$(mktemp -d)"
   NAME="node-$NODE_VERSION-linux-$ARCH"
@@ -29,6 +37,7 @@ ln -sfn "/opt/bom-ops/releases/$VERSION" /opt/bom-ops/current
 install -m 755 "$HERE/bomops.sh" /opt/bom-ops/bomops.sh
 chown -R root:root /opt/bom-ops
 
+# Releases come from S3 (instance role) when BOM_RELEASE_S3 is set in /etc/bom-ops/env, else GitHub Releases.
 if [ ! -f /etc/bom-ops/env ]; then
   install -m 640 -o root -g bomops "$HERE/env.example" /etc/bom-ops/env
   echo "Created /etc/bom-ops/env — set BOM_DEMO_PASSWORD_HASH (and provider keys) before starting."

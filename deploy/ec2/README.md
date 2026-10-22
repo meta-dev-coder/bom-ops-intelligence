@@ -14,25 +14,32 @@ known IPs. The service uses its own Node at `/opt/bom-ops/bin/node`.
 
 Because it is HTTP, the HTTPS GitHub Pages site cannot call it; Pages stays Simulation-only.
 
-## 1. Build a release
+## 1. Build and upload a release (like acs-demo `live-dc`)
 
-Either push a tag (GitHub Actions builds and publishes it as a GitHub Release):
 ```bash
-git tag ec2-$(date -u +%Y%m%d-%H%M) && git push origin --tags
+npm run release:ec2      # → releases/bom-ops-<tag>.tar.gz + .sha256 + releases/latest; prints the 3 upload commands
 ```
-or run the **EC2 release** workflow manually (Actions → EC2 release → Run workflow), or build locally with
-`npm run release:ec2` (→ `releases/bom-ops-<tag>.tar.gz` + `.sha256`). The release contains the web bundle
-(with the public ion token), the bundled server, the data files and these ops scripts — never server keys.
+Upload with the uploader IAM user (`arpana_thakur`, policy `live-dc-releases`); `latest` goes **last**:
+```text
+S3=s3://i595stackv5-i595corridordata41064a5b-oixfpv0dyrzj/releases/live-dc/bom-ops
+aws s3 cp releases/bom-ops-<tag>.tar.gz        $S3/bom-ops-<tag>.tar.gz
+aws s3 cp releases/bom-ops-<tag>.tar.gz.sha256 $S3/bom-ops-<tag>.tar.gz.sha256
+aws s3 cp releases/latest                      $S3/latest --content-type text/plain --cache-control no-store
+```
+The prefix sits under `releases/live-dc/` on purpose: the existing uploader policy and the instance role
+(`devteam_ssm_access`, inline policy `live-dc`) already allow it, so no IAM change is needed.
+(GitHub Actions → **EC2 release** also publishes the same tarball as a GitHub Release.)
 
-## 2. First install (on the instance, e.g. via SSM Session Manager)
+## 2. First install (on the instance, e.g. SSM Session Manager)
 
 ```bash
-TAG=$(curl -fsSL https://api.github.com/repos/meta-dev-coder/bom-ops-intelligence/releases/latest | grep -o '"tag_name": *"[^"]*"' | cut -d'"' -f4)
-U=https://github.com/meta-dev-coder/bom-ops-intelligence/releases/download/$TAG
-curl -fsSLO $U/bom-ops-$TAG.tar.gz && curl -fsSLO $U/bom-ops-$TAG.tar.gz.sha256
-sha256sum -c bom-ops-$TAG.tar.gz.sha256
-mkdir $TAG && tar -xzf bom-ops-$TAG.tar.gz -C $TAG && cd $TAG
-sudo ./install.sh            # user bomops, own Node 22, /opt/bom-ops/current, /etc/bom-ops/env (kept if present), unit enabled
+S3=s3://i595stackv5-i595corridordata41064a5b-oixfpv0dyrzj/releases/live-dc/bom-ops
+V=$(aws s3 cp $S3/latest - | tr -d '[:space:]')
+aws s3 cp $S3/bom-ops-$V.tar.gz . && aws s3 cp $S3/bom-ops-$V.tar.gz.sha256 .
+sha256sum -c bom-ops-$V.tar.gz.sha256
+mkdir $V && tar -xzf bom-ops-$V.tar.gz -C $V && cd $V
+sudo ./install.sh            # user bomops, Node copied from /opt/live-dc/bin/node (or downloaded), /opt/bom-ops/current,
+                             # /etc/bom-ops/env (kept if present; BOM_RELEASE_S3 preset), unit enabled (not started)
 ```
 
 Set the password and keys, then start:
@@ -52,7 +59,7 @@ after the demo. Then open `http://34.237.187.140:8096/`.
 ## 4. Operate
 
 ```bash
-sudo /opt/bom-ops/bomops.sh update latest     # or: update ec2-<tag>   (verifies sha256, switches atomically, keeps 3)
+sudo /opt/bom-ops/bomops.sh update latest     # from $BOM_RELEASE_S3 (or GitHub if unset); verifies sha256, switches atomically, keeps 3
 sudo /opt/bom-ops/bomops.sh rollback
 /opt/bom-ops/bomops.sh status                 # unit, release, port, /healthz
 /opt/bom-ops/bomops.sh logs                   # journalctl -u bom-ops -f

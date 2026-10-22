@@ -60,4 +60,10 @@ execFileSync('tar', ['-czf', tarball, '-C', out, '.']);
 const hash = createHash('sha256');
 await new Promise((res, rej) => createReadStream(tarball).on('data', d => hash.update(d)).on('end', res).on('error', rej));
 writeFileSync(`${tarball}.sha256`, `${hash.digest('hex')}  bom-ops-${tag}.tar.gz\n`);
+const S3 = process.env.BOM_RELEASE_S3 ?? 's3://i595stackv5-i595corridordata41064a5b-oixfpv0dyrzj/releases/live-dc/bom-ops';
+writeFileSync(join(root, 'releases', 'latest'), `${tag}\n`);
+console.log(`\nUpload (run yourself, with the uploader IAM user; \`latest\` LAST):
+aws s3 cp releases/bom-ops-${tag}.tar.gz        ${S3}/bom-ops-${tag}.tar.gz
+aws s3 cp releases/bom-ops-${tag}.tar.gz.sha256 ${S3}/bom-ops-${tag}.tar.gz.sha256
+aws s3 cp releases/latest                       ${S3}/latest --content-type text/plain --cache-control no-store\n`);
 console.log(`✓ ${relative(root, tarball)} (+ .sha256) — ion token in web bundle: ${process.env.VITE_CESIUM_ION_TOKEN || existsSync('.env.local') ? 'yes' : 'NO (map will lack terrain/buildings)'}`);
