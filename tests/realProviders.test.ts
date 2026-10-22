@@ -73,3 +73,26 @@ describe('AeroDataBox arrivals', () => {
     expect(terminalFor(undefined)).toBe('terminal-unassigned');
   });
 });
+
+describe('AeroDataBox request routing', () => {
+  const assumptions = { seatsByCategory: { WIDEBODY: 300, NARROWBODY: 180, REGIONAL: 72 }, loadFactor: 0.85 };
+  const capture = async (via: 'rapidapi' | 'apimarket' | 'direct', direct?: { baseUrl: string; keyHeader: string }) => {
+    let seen: { url: string; headers: Record<string, string> } | null = null;
+    const fetchImpl = (async (url: string, init: { headers: Record<string, string> }) => {
+      seen = { url, headers: init.headers };
+      return { ok: true, json: async () => ({ arrivals: [] }) };
+    }) as unknown as typeof fetch;
+    const { createAeroDataBoxFetcher } = await import('../server/providers/aerodatabox');
+    await createAeroDataBoxFetcher({ apiKey: 'K', via, direct, assumptions, horizonMinutes: 120, fetchImpl, now: () => Date.parse('2026-10-22T14:00:00Z') })(new AbortController().signal);
+    return seen!;
+  };
+  it('uses the right host and key header per channel, with an IST time window', async () => {
+    const r = await capture('rapidapi');
+    expect(r.url).toMatch(/^https:\/\/aerodatabox\.p\.rapidapi\.com\/flights\/airports\/icao\/VABB\/2026-10-22T19:15\/2026-10-22T21:30\?direction=Arrival/);
+    expect(r.headers['X-RapidAPI-Key']).toBe('K');
+    expect((await capture('apimarket')).headers['x-magicapi-key']).toBe('K');
+    const d = await capture('direct', { baseUrl: 'https://example.test/v1/', keyHeader: 'x-api-key' });
+    expect(d.url.startsWith('https://example.test/v1/flights/airports/icao/VABB/')).toBe(true);
+    expect(d.headers['x-api-key']).toBe('K');
+  });
+});

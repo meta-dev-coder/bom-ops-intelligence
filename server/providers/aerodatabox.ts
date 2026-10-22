@@ -63,15 +63,21 @@ export function istLocal(ms: number): string {
   return new Date(ms + 5.5 * 3600_000).toISOString().slice(0, 16);
 }
 
-export function createAeroDataBoxFetcher(opts: { apiKey: string; via: 'rapidapi' | 'apimarket'; assumptions: FlightAssumptions; horizonMinutes: number; fetchImpl?: typeof fetch; now?: () => number }) {
+/** `direct` = an AeroDataBox direct subscription: base URL and key header come from your AeroDataBox dashboard. */
+export interface AeroDataBoxDirect { baseUrl: string; keyHeader: string }
+
+export function createAeroDataBoxFetcher(opts: { apiKey: string; via: 'rapidapi' | 'apimarket' | 'direct'; direct?: AeroDataBoxDirect; assumptions: FlightAssumptions; horizonMinutes: number; fetchImpl?: typeof fetch; now?: () => number }) {
   const f = opts.fetchImpl ?? fetch;
   const now = opts.now ?? Date.now;
   return async (signal: AbortSignal) => {
     const t = now();
     const path = `flights/airports/icao/VABB/${istLocal(t - 15 * 60_000)}/${istLocal(t + opts.horizonMinutes * 60_000)}?direction=Arrival&withLeg=false&withCancelled=true&withCodeshared=false&withCargo=false&withPrivate=false`;
-    const [url, headers] = opts.via === 'apimarket'
-      ? [`https://prod.api.market/api/v1/aedbx/aerodatabox/${path}`, { 'x-magicapi-key': opts.apiKey }]
-      : [`https://aerodatabox.p.rapidapi.com/${path}`, { 'X-RapidAPI-Key': opts.apiKey, 'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com' }];
+    const [url, headers]: [string, Record<string, string>] =
+      opts.via === 'direct' && opts.direct
+        ? [`${opts.direct.baseUrl.replace(/\/+$/, '')}/${path}`, { [opts.direct.keyHeader]: opts.apiKey }]
+        : opts.via === 'apimarket'
+          ? [`https://prod.api.market/api/v1/aedbx/aerodatabox/${path}`, { 'x-magicapi-key': opts.apiKey }]
+          : [`https://aerodatabox.p.rapidapi.com/${path}`, { 'X-RapidAPI-Key': opts.apiKey, 'X-RapidAPI-Host': 'aerodatabox.p.rapidapi.com' }];
     const res = await f(url, { signal, headers });
     if (!res.ok) throw new Error(`AERODATABOX_HTTP_${res.status}`);
     return parseAeroDataBox(await res.json(), { now: t, assumptions: opts.assumptions, horizonMinutes: opts.horizonMinutes });

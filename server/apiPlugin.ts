@@ -23,8 +23,13 @@ export interface ApiEnv {
   TOMTOM_API_KEY?: string;
   OPEN_METEO_API_KEY?: string;
   AERODATABOX_API_KEY?: string;
-  /** 'rapidapi' (default) or 'apimarket' */
+  /** 'rapidapi' (default), 'apimarket' or 'direct' */
   AERODATABOX_VIA?: string;
+  /** direct subscription only: API base URL and key header name from the AeroDataBox dashboard */
+  AERODATABOX_BASE_URL?: string;
+  AERODATABOX_KEY_HEADER?: string;
+  /** Flight refresh in seconds (default 900; ~300 suits the $19 Starter plan). */
+  AERODATABOX_REFRESH_SECONDS?: string;
   /** Exact origin allowed to call /api cross-origin, e.g. https://meta-dev-coder.github.io */
   API_ALLOWED_ORIGIN?: string;
 }
@@ -63,9 +68,11 @@ export function createApi(env: ApiEnv, root: string, base = '/') {
     providerId: 'aerodatabox', label: 'Flights — AeroDataBox', enabled: Boolean(env.AERODATABOX_API_KEY),
     disabledReason: 'Set AERODATABOX_API_KEY (server-side) to enable real arrivals',
     // Free/low tiers have small monthly quotas: refresh every 15 min.
-    refreshSeconds: 900, staleAfterSeconds: 45 * 60, timeoutMs: 10_000, retries: 0,
+    refreshSeconds: Math.max(120, Number(env.AERODATABOX_REFRESH_SECONDS) || 900), staleAfterSeconds: 45 * 60, timeoutMs: 10_000, retries: 0,
     fetcher: createAeroDataBoxFetcher({
-      apiKey: env.AERODATABOX_API_KEY ?? '', via: env.AERODATABOX_VIA === 'apimarket' ? 'apimarket' : 'rapidapi',
+      apiKey: env.AERODATABOX_API_KEY ?? '',
+      via: env.AERODATABOX_VIA === 'apimarket' ? 'apimarket' : env.AERODATABOX_VIA === 'direct' ? 'direct' : 'rapidapi',
+      direct: env.AERODATABOX_BASE_URL && env.AERODATABOX_KEY_HEADER ? { baseUrl: env.AERODATABOX_BASE_URL, keyHeader: env.AERODATABOX_KEY_HEADER } : undefined,
       assumptions: model.liveFlightAssumptions, horizonMinutes: 120,
     }),
   });
