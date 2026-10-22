@@ -4,3 +4,5 @@ token
 node_modules/
 dist/
 tools/.osm_cache.json
+test-results/
+playwright-report/

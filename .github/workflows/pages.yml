@@ -32,6 +32,7 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
           VITE_STATIC_HOSTING: "true"
           VITE_DATA_MODE: MOCK
+          GITHUB_SHA: ${{ github.sha }}
           # Ships in the public bundle by design: restrict this token in Cesium ion to the BOM
           # assets and to https://<user>.github.io as an allowed URL.
           VITE_CESIUM_ION_TOKEN: ${{ secrets.VITE_CESIUM_ION_TOKEN }}
@@ -39,6 +40,27 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
+
+  # Browser smoke test (spec §11.1). Runs alongside the build; it does not block a deploy,
+  # because headless WebGL in CI can be flaky — check its result in the Actions tab.
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run e2e
+        env:
+          CI: "true"
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-results
+          path: test-results/
 
   deploy:
     needs: build

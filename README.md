@@ -13,7 +13,8 @@ nvm use 22
 npm install
 cp .env.example .env.local   # add VITE_CESIUM_ION_TOKEN (and optional server keys)
 npm run dev                  # http://localhost:5173
-npm test                     # vitest — model, scenario, fallback, alerts, roles, geometry, providers
+npm test                     # vitest — unit + component tests (model, scenario, fallback, alerts, roles, inspector)
+npm run e2e                  # Playwright browser smoke test (first run: npx playwright install chromium)
 npm run build                # typecheck + production build
 ```
 
@@ -34,6 +35,25 @@ Without an ion token the app still runs (Esri imagery on a flat ellipsoid, no 3D
 - **Data** — Mock Mode by default. LIVE mode calls Open-Meteo and TomTom through a same-origin
   proxy (`server/`) with caching, timeouts, retry, and LIVE → STALE → SIMULATION fallback.
 
+- **Guided demo** — first visit shows a start tile (guided demo or skip); 6 steps following the
+  spec's presenter script with "Do it for me" and Skip/Back/Next. Reopen via **Guide**; `?intro=off` skips it.
+- **Roles** — Supervisor edits model parameters and band thresholds; Administrator sets refresh
+  interval and sees provider/geometry configuration (never keys); Demo Operator gets scenario
+  diagnostics (downloadable run record), fixtures and "Reset environment".
+
+## Hosting
+
+GitHub Pages: https://meta-dev-coder.github.io/bom-ops-intelligence/ — built by
+`.github/workflows/pages.yml` on every push to `main` (static, Mock Mode only; the ion token comes
+from the `VITE_CESIUM_ION_TOKEN` Actions secret). LIVE mode needs the `/api` proxy, i.e. `npm run dev`
+/ `vite preview` or another Node host.
+
+## Docs
+
+- `docs/ASSUMPTIONS_REGISTER.md` — every model/fixture assumption, data-source plan, decisions to validate, sign-off
+- `docs/ACCEPTANCE.md` — SC/FR acceptance checklist mapped to evidence
+- `docs/DATA_SOURCES.md` — free / trial / licensed options for real BOM data
+
 ## Where things live
 
 | Path | Role |
@@ -49,6 +69,8 @@ Without an ion token the app still runs (Esri imagery on a flat ellipsoid, no 3D
 | `src/map/` | Cesium scene, layers, central picker, camera, synthetic aircraft |
 | `src/state/store.ts` | Zustand store; Cesium objects are never stored in it |
 | `tools/build_entities.py` | Regenerates the entity GeoJSON from an OSM extract |
+| `src/demo/` | Guided demo flow (pure step logic + UI) |
+| `tests/`, `e2e/` | Vitest unit/component tests; Playwright smoke test |
 
 ## Geometry
 

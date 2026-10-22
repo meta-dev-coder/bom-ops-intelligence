@@ -15,7 +15,11 @@ import { deriveOperationalState } from '../simulation/operationalState';
 import { createScenarioRunner, INITIAL_MACHINE, reduceScenario, type ScenarioEvent, type ScenarioMachine } from '../simulation/ScenarioEngine';
 import type { BaselineInputs, OperationalState } from '../simulation/scenarioTypes';
 import type { AlertStatus, EventKind, EventLogEntry, RecommendationAlert } from '../types/alerts';
+import type { ScenarioResult } from '../types/scenarios';
 import type { ProviderHealth } from '../types/telemetry';
+import { DATA_CONFIG } from '../config/dataSources';
+import { BASELINE_FIXTURE } from '../data/MockDataService';
+import { buildScenarioResult } from '../simulation/scenarioResult';
 
 export type DataMode = 'MOCK' | 'LIVE';
 export type LayerKey = 'buildings' | 'photoreal' | 'aircraft' | 'roads' | 'facilities' | 'runways';
@@ -46,6 +50,9 @@ export interface AppState {
   focusRequest: { entityId: string | null; nonce: number };
   aircraftResetNonce: number;
   demo: { mode: DemoMode; step: number };
+  /** One §8.2 record per completed run (session only). */
+  scenarioResults: ScenarioResult[];
+  settings: { soundEnabled: boolean; sceneMode: '3D' | '2D'; refreshSeconds: number };
 
   setRole(r: RoleId): void;
   setDataMode(m: DataMode): void;
@@ -67,6 +74,12 @@ export interface AppState {
   setDemo(patch: Partial<AppState['demo']>): void;
   /** Puts the app in the known starting state for the presenter script, then opens step 1. */
   startGuidedDemo(): void;
+  setSoundEnabled(v: boolean): void;
+  setSceneMode(m: '3D' | '2D'): void;
+  /** Admin: provider refresh interval (logged as a configuration change). */
+  setRefreshSeconds(s: number): void;
+  /** Demo Operator: back to a clean presentation state (scenario, alerts, history, parameters, layers). */
+  resetEnvironment(): void;
 }
 
 let eventSeq = 0;
@@ -111,7 +124,21 @@ export const useApp = create<AppState>((set, get) => {
           log('ALERT_CREATED', `${alert.severity}: ${alert.title}`, alert.alertId);
         }
       }
-      if (get().machine.phase === 'ACTIVE') log('SCENARIO_ACTIVE', `${SCENARIO_MONSOON.name} — all steps applied`);
+      if (get().machine.phase === 'ACTIVE') {
+        const s = get();
+        const base = s.frozenBaseline ?? s.baseline;
+        const result = buildScenarioResult({
+          scenario: SCENARIO_MONSOON,
+          runCount: s.machine.runCount,
+          baseline: deriveOperationalState(base, SCENARIO_MONSOON, 0, s.assumptions),
+          result: deriveOperationalState(base, SCENARIO_MONSOON, s.machine.stepIndex, s.assumptions),
+          assumptions: s.assumptions,
+          baselineFixtureId: base.fixtureId,
+          createdAt: new Date().toISOString(),
+        });
+        set(st => ({ scenarioResults: [result, ...st.scenarioResults].slice(0, 20) }));
+        log('SCENARIO_ACTIVE', `${SCENARIO_MONSOON.name} — all steps applied (record ${result.runId})`);
+      }
     },
   });
 
@@ -147,6 +174,8 @@ export const useApp = create<AppState>((set, get) => {
     focusRequest: { entityId: null, nonce: 0 },
     aircraftResetNonce: 0,
     demo: { mode: 'off', step: 0 },
+    scenarioResults: [],
+    settings: { soundEnabled: false, sceneMode: '3D', refreshSeconds: DATA_CONFIG.refreshSeconds },
 
     setRole: role => {
       const previous = get().role;
@@ -190,6 +219,33 @@ export const useApp = create<AppState>((set, get) => {
     resetScenario: () => {
       if (!guard('scenario.run')) return;
       doReset('Baseline restored; scenario alert archived to history');
+    },
+    setSoundEnabled: v => set(s => ({ settings: { ...s.settings, soundEnabled: v } })),
+    setSceneMode: m => set(s => ({ settings: { ...s.settings, sceneMode: m } })),
+    setRefreshSeconds: sec => {
+      if (!guard('config.edit') || !Number.isFinite(sec) || sec < 30 || sec > 900) return;
+      const prev = get().settings.refreshSeconds;
+      if (prev === sec) return;
+      set(s => ({ settings: { ...s.settings, refreshSeconds: sec } }));
+      log('CONFIG_CHANGED', `Provider refresh interval ${prev}s → ${sec}s`);
+    },
+    resetEnvironment: () => {
+      if (!guard('environment.reset')) return;
+      runner.reset();
+      set(s => ({
+        frozenBaseline: null,
+        baseline: s.dataMode === 'MOCK' ? mockBaseline() : s.baseline,
+        alerts: [], events: [], scenarioResults: [],
+        assumptions: DEFAULT_ASSUMPTIONS,
+        layers: { buildings: true, photoreal: false, aircraft: true, roads: true, facilities: true, runways: true },
+        selectedEntityId: null, hoveredEntityId: null,
+        demo: { mode: 'off', step: 0 },
+        aircraftResetNonce: s.aircraftResetNonce + 1,
+        focusRequest: { entityId: null, nonce: s.focusRequest.nonce + 1 },
+        ui: { ...s.ui, alertExpanded: false, history: false },
+        settings: { ...s.settings, sceneMode: '3D' },
+      }));
+      log('ENVIRONMENT_RESET', `Environment reset to fixture ${BASELINE_FIXTURE.fixtureId}`);
     },
     setDemo: patch => set(s => ({ demo: { ...s.demo, ...patch } })),
     startGuidedDemo: () => {

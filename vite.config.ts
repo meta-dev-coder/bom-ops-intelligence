@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
 import { defineConfig, loadEnv } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 import { apiPlugin } from './server/apiPlugin';
@@ -18,7 +19,12 @@ export default defineConfig(({ mode }) => {
   const base = `/${(env.BASE_PATH || '').replace(/^\/+|\/+$/g, '')}/`.replace(/^\/\/$/, '/');
   return {
     base,
-    define: { CESIUM_BASE_URL: JSON.stringify(`${base}${CESIUM_DIR}`) },
+    define: {
+      CESIUM_BASE_URL: JSON.stringify(`${base}${CESIUM_DIR}`),
+      // Visible build indicator (spec §11.4): version + short commit (CI sets GITHUB_SHA).
+      __APP_VERSION__: JSON.stringify(JSON.parse(readFileSync('package.json', 'utf8')).version),
+      __BUILD_ID__: JSON.stringify((env.GITHUB_SHA ?? '').slice(0, 7) || 'local'),
+    },
     plugins: [
       react(),
       tailwindcss(),

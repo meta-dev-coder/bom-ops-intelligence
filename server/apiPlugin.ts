@@ -15,7 +15,8 @@ import { createTomTomFetcher, type SegmentGeometry } from './providers/tomtom';
 export interface ApiEnv { TOMTOM_API_KEY?: string; OPEN_METEO_API_KEY?: string; OPEN_METEO_ALLOW_FREE?: string }
 
 const AIRPORT = { lat: 19.0896, lon: 72.8656 };
-const LIVE_SEGMENTS = ['road-sahar-inbound', 'road-sahar-outbound'];
+// Every road in the baseline fixture can be served live (TomTom) when a key is configured.
+const liveSegments = (baseline: { traffic: { id: string }[] }) => baseline.traffic.map(t => t.id);
 
 export function createApi(env: ApiEnv, root: string, base = '/') {
   const geo = JSON.parse(readFileSync(`${root}/src/data/fixtures/bom-entities.geojson`, 'utf8'));
@@ -32,7 +33,7 @@ export function createApi(env: ApiEnv, root: string, base = '/') {
     fetcher: createOpenMeteoFetcher({ ...AIRPORT, apiKey: env.OPEN_METEO_API_KEY }),
   });
 
-  const traffic = Object.fromEntries(LIVE_SEGMENTS.map(id => {
+  const traffic = Object.fromEntries(liveSegments(baseline).map(id => {
     const f = geo.features.find((x: any) => x.id === id);
     const seg: SegmentGeometry = { id, name: f.properties.name, coordinates: f.geometry.coordinates, lengthM: lengthById[id] };
     return [id, createProviderService({

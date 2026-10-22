@@ -28,6 +28,14 @@
       "freeFlowSpeedKmh": 45,
       "status": "FREE_FLOW",
       "lengthM": 2179
+    },
+    {
+      "id": "road-t1-access",
+      "name": "Nehru Road \u2014 T1 approach",
+      "currentSpeedKmh": 22,
+      "freeFlowSpeedKmh": 35,
+      "status": "MODERATE",
+      "lengthM": 418
     }
   ],
   "flights": [
@@ -132,7 +140,7 @@
       }
     },
     "terminal-t1": {
-      "roadEntityId": null,
+      "roadEntityId": "road-t1-access",
       "departingDropoffVehicles": 70,
       "cabStaging": {
         "occupied": 64,

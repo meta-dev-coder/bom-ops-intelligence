@@ -36,7 +36,7 @@ export interface RecommendationAlert {
 export type EventKind =
   | 'SCENARIO_RUN' | 'SCENARIO_ACTIVE' | 'SCENARIO_RESET' | 'SCENARIO_ERROR'
   | 'ALERT_CREATED' | 'ALERT_STATUS' | 'ALERT_NOTE' | 'ALERT_ASSIGNED'
-  | 'ROLE_CHANGED' | 'DATA_MODE_CHANGED' | 'ASSUMPTIONS_CHANGED';
+  | 'ROLE_CHANGED' | 'DATA_MODE_CHANGED' | 'ASSUMPTIONS_CHANGED' | 'CONFIG_CHANGED' | 'ENVIRONMENT_RESET';
 
 export interface EventLogEntry {
   id: number;

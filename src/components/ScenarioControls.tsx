@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { num } from '../app/format';
 import { roleLabel } from '../config/roles';
 import { SCENARIO_MONSOON } from '../data/MockDataService';
-import { applyDraft, EDITABLE_FIELDS, toDraft, type Draft, type EditableKey } from '../simulation/assumptionEdits';
+import { applyDraft, BAND_FIELDS, EDITABLE_FIELDS, toDraft, type Draft, type EditableKey } from '../simulation/assumptionEdits';
 import { DEFAULT_ASSUMPTIONS } from '../simulation/demandPressure';
 import { useApp, useCan, useOperational } from '../state/store';
 import { Row, Section } from './Panel';
@@ -23,13 +23,30 @@ function AssumptionsEditor() {
   };
   return (
     <details className="mt-2 text-xs">
-      <summary className="cursor-pointer text-slate-300">Edit approved parameters (Supervisor)</summary>
+      <summary className="cursor-pointer text-slate-300">Edit approved parameters & thresholds (Supervisor)</summary>
       <div className="mt-2 grid grid-cols-2 gap-2">
         {EDITABLE_FIELDS.map(f => (
           <label key={f.key} className="flex flex-col gap-0.5 text-[11px] text-slate-400">
             {f.label}
             <input
               type="number" inputMode="decimal" step={f.step} min={f.min} max={f.max} disabled={!idle}
+              value={draft[f.key]}
+              aria-invalid={Boolean(errors[f.key])}
+              aria-describedby={errors[f.key] ? `err-${f.key}` : undefined}
+              onChange={ev => setDraft({ ...draft, [f.key]: ev.target.value })}
+              className={`tabular rounded border bg-ink-900 px-2 py-1 text-slate-100 disabled:opacity-50 ${errors[f.key] ? 'border-crit' : 'border-line'}`}
+            />
+            {errors[f.key] && <span id={`err-${f.key}`} className="text-[10px] text-crit">{errors[f.key]}</span>}
+          </label>
+        ))}
+      </div>
+      <p className="mt-3 mb-1 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">Index band thresholds (Low starts at 0)</p>
+      <div className="grid grid-cols-3 gap-2">
+        {BAND_FIELDS.map(f => (
+          <label key={f.key} className="flex flex-col gap-0.5 text-[11px] text-slate-400">
+            {f.label}
+            <input
+              type="number" inputMode="numeric" step={1} min={1} max={100} disabled={!idle}
               value={draft[f.key]}
               aria-invalid={Boolean(errors[f.key])}
               aria-describedby={errors[f.key] ? `err-${f.key}` : undefined}

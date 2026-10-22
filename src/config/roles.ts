@@ -3,7 +3,8 @@ export type RoleId = 'VIEWER' | 'ANALYST' | 'SUPERVISOR' | 'ADMIN' | 'DEMO_OPERA
 
 export type Permission =
   | 'scenario.run' | 'alert.acknowledge' | 'alert.note' | 'alert.assign' | 'alert.resolve'
-  | 'assumptions.edit' | 'dataMode.switch' | 'diagnostics.view';
+  | 'assumptions.edit' | 'dataMode.switch' | 'diagnostics.view'
+  | 'config.edit' | 'fixtures.view' | 'environment.reset';
 
 export const ROLES: { id: RoleId; label: string }[] = [
   { id: 'VIEWER', label: 'Viewer / Executive' },
@@ -23,8 +24,8 @@ export const PERMISSIONS: Record<RoleId, Permission[]> = {
   VIEWER: VIEWER_CAN_REPLAY ? ['scenario.run'] : [],
   ANALYST,
   SUPERVISOR,
-  ADMIN: ['dataMode.switch', 'diagnostics.view'],
-  DEMO_OPERATOR: ['scenario.run', 'alert.acknowledge', 'alert.note', 'dataMode.switch', 'diagnostics.view'],
+  ADMIN: ['dataMode.switch', 'diagnostics.view', 'config.edit'],
+  DEMO_OPERATOR: ['scenario.run', 'alert.acknowledge', 'alert.note', 'dataMode.switch', 'diagnostics.view', 'fixtures.view', 'environment.reset'],
 };
 
 export const can = (role: RoleId, p: Permission) => PERMISSIONS[role].includes(p);

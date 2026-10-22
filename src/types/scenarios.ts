@@ -1,4 +1,4 @@
-import type { WeatherRecord, TrafficSegment } from './telemetry';
+import type { DataState, WeatherRecord, TrafficSegment } from './telemetry';
 
 export type ScenarioPhase = 'IDLE' | 'RUNNING' | 'ACTIVE' | 'RESETTING' | 'ERROR';
 export type ScenarioStepId = 'weather' | 'traffic' | 'demand' | 'impact' | 'recommendation';
@@ -26,4 +26,21 @@ export interface ScenarioDefinition {
   stepDurationMs: number;
   steps: ScenarioStep[];
   assumptions: string[];
+}
+
+/** Spec §8.2: every run yields a self-describing, reproducible record. */
+export interface ScenarioResult {
+  runId: string;
+  scenarioId: string;
+  scenarioName: string;
+  version: string;
+  baselineFixtureId: string;
+  createdAt: string;
+  inputs: {
+    weather: { precipitationMmPerHour: number; windSpeedKmh: number; condition: string; state: DataState };
+    roads: { id: string; currentSpeedKmh: number; freeFlowSpeedKmh?: number; status: string; state: DataState }[];
+    arrivals: { terminalId: string; flights: number; passengers: number }[];
+  };
+  assumptions: Record<string, unknown>;
+  outputs: { terminalId: string; baselineIndex: number; index: number; band: string; pressureRatio: number; effectiveCapacityVehicles: number; dispatchDelayMinutes: number | null }[];
 }

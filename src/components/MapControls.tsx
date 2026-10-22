@@ -22,6 +22,8 @@ export function MapControls() {
   const legend = useApp(s => s.ui.legend);
   const setUi = useApp(s => s.setUi);
   const [open, setOpen] = useState(false);
+  const sceneMode = useApp(s => s.settings.sceneMode);
+  const setSceneMode = useApp(s => s.setSceneMode);
   const btn = 'glass grid h-9 w-9 place-items-center rounded-lg text-sm text-slate-200 hover:text-white';
   const z = (d: 1 | -1) => { const v = getViewer(); if (v) zoom(v, d); };
   return (
@@ -47,6 +49,7 @@ export function MapControls() {
         <button type="button" className={btn} onClick={() => z(1)} aria-label="Zoom in">＋</button>
         <button type="button" className={btn} onClick={() => z(-1)} aria-label="Zoom out">－</button>
         <button type="button" className={btn} onClick={() => focus(null)} aria-label="Reset camera to airport view" title="Reset camera">⌂</button>
+        <button type="button" className={`${btn} text-[11px] font-semibold`} onClick={() => setSceneMode(sceneMode === '3D' ? '2D' : '3D')} aria-label={`Switch to ${sceneMode === '3D' ? '2D' : '3D'} view`} title={`Switch to ${sceneMode === '3D' ? '2D' : '3D'} view`}>{sceneMode === '3D' ? '2D' : '3D'}</button>
         <button type="button" className={btn} onClick={() => setOpen(o => !o)} aria-expanded={open} aria-label="Layers" title="Layers">≡</button>
         <button type="button" className={btn} onClick={() => setUi({ legend: !legend })} aria-expanded={legend} aria-label="Legend" title="Legend">?</button>
       </div>

@@ -1,4 +1,4 @@
-import { ROAD_COLORS, TYPE_COLORS } from '../map/AirportLayers';
+import { ROAD_COLORS, TYPE_COLORS } from '../map/colors';
 import { STATUS_LABEL } from './TrafficCard';
 
 export function MapLegend() {
@@ -26,6 +26,7 @@ export function MapLegend() {
         <li className="flex items-center gap-2"><span aria-hidden="true" className="text-sky-300">✈</span>Arrival</li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="text-violet-300">✈</span>Departure</li>
         <li className="flex items-center gap-2"><span aria-hidden="true" className="rain inline-block h-3 w-5 rounded-sm border border-sky-300/40" />Simulated heavy rain</li>
+        <li className="flex items-center gap-2"><span aria-hidden="true" className="inline-block h-3 w-3 rounded-full border border-red-400 bg-red-500/30" />Simulated hazard area (⚠ blockage)</li>
       </ul>
     </div>
   );

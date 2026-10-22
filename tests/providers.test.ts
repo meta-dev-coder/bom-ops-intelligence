@@ -3,6 +3,7 @@ import { createProviderService, redact } from '../server/providerService';
 import { parseOpenMeteo } from '../server/providers/openMeteo';
 import { parseTomTom, statusFor } from '../server/providers/tomtom';
 import model from '../src/config/model.json';
+import { BASELINE_FIXTURE } from '../src/data/MockDataService';
 
 const quiet = { warn: () => {} };
 const noSleep = async () => {};
@@ -123,7 +124,7 @@ describe('/api handler under a sub-path base', () => {
     });
     const h = await call('/poc/api/health');
     expect(h.status).toBe(200);
-    expect(h.body.providers.length).toBe(3);
+    expect(h.body.providers.length).toBe(1 + BASELINE_FIXTURE.traffic.length); // weather + one per road
     expect((await call('/poc/index.html')).next).toBe(true);
   });
 });

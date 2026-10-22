@@ -123,9 +123,34 @@ function TerminalView({ e, k, kBase, op, scenarioActive }: { e: AirportEntity; k
           <ul className="mt-1 list-disc space-y-0.5 pl-4">{describeAssumptions(assumptions).map(a => <li key={a}>{a}</li>)}</ul>
         </details>
       </Section>
+      <EntityAlertHistory e={e} />
       <AdjacentLinks e={e} />
       <Provenance e={e} />
     </>
+  );
+}
+
+/** Spec §4.4: alerts that involved this entity, newest first (session history). */
+function EntityAlertHistory({ e }: { e: AirportEntity }) {
+  const all = useApp(s => s.alerts);
+  const setUi = useApp(s => s.setUi);
+  const alerts = all.filter(a => a.entityIds.includes(e.id));
+  return (
+    <Section title="Alert history" id={`h-alerts-${e.id}`}>
+      {alerts.length === 0 ? <p className="text-xs text-slate-500">No alerts for this {e.type === 'ROAD' ? 'segment' : 'facility'} in this session.</p> : (
+        <ul className="space-y-1">
+          {alerts.map(a => (
+            <li key={a.alertId} className="text-xs">
+              <span className="font-semibold text-slate-200">{a.severity}</span> <span className="text-slate-300">{a.title}</span>
+              <div className="text-[10px] text-slate-500">
+                {new Date(a.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', hour12: false, hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })} IST · {a.status}{a.archived ? ' · archived' : ''} · {a.origin === 'SCENARIO' ? 'scenario' : 'live rule'}
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button type="button" onClick={() => setUi({ history: true })} className="mt-1 text-[11px] text-accent hover:underline">Open event history</button>
+    </Section>
   );
 }
 
@@ -134,13 +159,16 @@ function AdjacentLinks({ e }: { e: AirportEntity }) {
   const focus = useApp(s => s.focus);
   if (!e.adjacentEntityIds.length) return null;
   return (
-    <div className="mt-2 flex flex-wrap gap-1.5">
+    <div className="mt-2">
+      <p className="mb-1 text-[10px] font-semibold tracking-wide text-slate-400 uppercase">{e.type === 'ROAD' ? 'Adjacent terminal' : 'Nearby access route & facilities'}</p>
+      <div className="flex flex-wrap gap-1.5">
       {e.adjacentEntityIds.map(id => (
         <button key={id} type="button" onClick={() => { select(id); focus(id); }}
           className="rounded border border-line px-2 py-0.5 text-[11px] text-slate-300 hover:border-accent/60 hover:text-white">
           {ENTITY_NAMES[id]}
         </button>
       ))}
+      </div>
     </div>
   );
 }
@@ -180,6 +208,7 @@ function RoadView({ e, op, base }: { e: AirportEntity; op: OperationalState; bas
           <p className="mt-2 text-[11px] text-slate-400">Scenario impact: this is the configured segment for <strong className="text-slate-200">{SCENARIO_MONSOON.name}</strong>; it feeds the Terminal 2 road capacity factor.</p>
         )}
       </Section>
+      <EntityAlertHistory e={e} />
       <AdjacentLinks e={e} />
       <Provenance e={e} />
     </>

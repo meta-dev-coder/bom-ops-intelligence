@@ -23,7 +23,7 @@ export function installMap(container: HTMLElement) {
   });
 
   // Scenario-derived styling only changes with these inputs; hover/selection reuse the last result.
-  let derived: { key: unknown[]; roadStatus: Record<string, RoadStatus>; pulseId: string | null } | null = null;
+  let derived: { key: unknown[]; roadStatus: Record<string, RoadStatus>; pulseId: string | null; hazards: Record<string, 'SIMULATED' | 'REPORTED'> } | null = null;
   const scenarioStyle = (s: AppState) => {
     const key = [s.baseline, s.frozenBaseline, s.machine, s.assumptions];
     if (!derived || key.some((k, i) => k !== derived!.key[i])) {
@@ -32,18 +32,22 @@ export function installMap(container: HTMLElement) {
         key,
         roadStatus: Object.fromEntries(Object.entries(op.traffic).map(([id, env]) => [id, env.data.status])),
         pulseId: op.impactApplied ? SCENARIO_MONSOON.targetEntityId : null,
+        hazards: Object.fromEntries(Object.entries(op.traffic)
+          .filter(([, env]) => env.data.status === 'BLOCKED' || env.data.status === 'SEVERE')
+          .map(([id, env]) => [id, env.state === 'SIMULATION' ? 'SIMULATED' : 'REPORTED'])),
       };
     }
     return derived;
   };
 
   const restyle = (s: AppState) => {
-    const { roadStatus, pulseId } = scenarioStyle(s);
+    const { roadStatus, pulseId, hazards } = scenarioStyle(s);
     airport.applyStyle({
       selectedId: s.selectedEntityId,
       hoveredId: s.hoveredEntityId,
       roadStatus,
       pulseId,
+      hazards,
       reducedMotion: s.reducedMotion,
       visible: { roads: s.layers.roads, facilities: s.layers.facilities, runways: s.layers.runways },
     });
@@ -68,6 +72,13 @@ export function installMap(container: HTMLElement) {
     if (s.layers.photoreal !== prev.layers.photoreal) void scene.setPhotorealVisible(s.layers.photoreal);
     if (s.reducedMotion !== prev.reducedMotion) aircraft.setAnimating(!s.reducedMotion);
     if (s.aircraftResetNonce !== prev.aircraftResetNonce) aircraft.reset();
+    if (s.settings.sceneMode !== prev.settings.sceneMode) {
+      if (s.settings.sceneMode === '2D') viewer.scene.morphTo2D(0.8);
+      else {
+        viewer.scene.morphTo3D(0.8);
+        const done = viewer.scene.morphComplete.addEventListener(() => { done(); flyHome(viewer, 0.8); });
+      }
+    }
     if (s.focusRequest.nonce !== prev.focusRequest.nonce) {
       const def = s.focusRequest.entityId ? ENTITY_BY_ID[s.focusRequest.entityId] : null;
       if (def) flyToEntity(viewer, def); else flyHome(viewer);

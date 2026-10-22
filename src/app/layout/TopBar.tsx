@@ -40,6 +40,7 @@ export function TopBar() {
       >
         <span aria-hidden="true">{dataMode === 'MOCK' ? '◆' : '●'}</span>{dataMode === 'MOCK' ? 'MOCK MODE' : 'LIVE DATA'}
       </span>
+      <span className="hidden font-mono text-[10px] text-slate-500 xl:inline" title="Build">{ENV.buildLabel}</span>
       {phase !== 'IDLE' && <span className="hidden rounded border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 text-[10px] font-bold text-amber-300 md:inline">SCENARIO {phase}</span>}
 
       <div className="ml-auto flex items-center gap-2">

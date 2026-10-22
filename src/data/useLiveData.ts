@@ -28,6 +28,7 @@ export function mockHealth(): ProviderHealth[] {
 
 export function useLiveData() {
   const dataMode = useApp(s => s.dataMode);
+  const refreshSeconds = useApp(s => s.settings.refreshSeconds);
 
   useEffect(() => {
     const { setProviderHealth } = useApp.getState();
@@ -78,12 +79,12 @@ export function useLiveData() {
 
     const loop = async () => {
       await refresh().catch(err => console.warn('[live-data] refresh failed', err));
-      if (!ctrl.signal.aborted) timer = setTimeout(loop, DATA_CONFIG.refreshSeconds * 1000);
+      if (!ctrl.signal.aborted) timer = setTimeout(loop, refreshSeconds * 1000);
     };
     void loop();
     return () => {
       ctrl.abort();
       clearTimeout(timer);
     };
-  }, [dataMode]);
+  }, [dataMode, refreshSeconds]);
 }

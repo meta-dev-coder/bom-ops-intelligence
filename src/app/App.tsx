@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { FEATURES } from '../config/featureFlags';
 import { MapControls } from '../components/MapControls';
 import { useLiveData } from '../data/useLiveData';
+import { useAlertSound } from './useAlertSound';
 import { DemoTour } from '../demo/DemoTour';
 import { CesiumViewer } from '../map/CesiumViewer';
 import { heavyRainThreshold } from '../simulation/demandPressure';
@@ -22,6 +23,7 @@ function RainOverlay() {
 
 export function App() {
   useLiveData();
+  useAlertSound();
   const reducedMotion = useApp(s => s.reducedMotion);
   const setUi = useApp(s => s.setUi);
 

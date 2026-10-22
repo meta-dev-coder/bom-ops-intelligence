@@ -53,6 +53,7 @@ r1432, len1432 = runway_polygon(way_pts('1554399144')[0], way_pts('510399288')[0
 
 inbound = ['1222180953', '1222196239', '1122603569', '436222499', '408596502']
 outbound = ['1164482241', '436222500', '1222180952', '370067588']
+t1_access = ['22860355', '22860195']
 
 features = [
     feature('terminal-t2', poly(ring('315613914')), name='Terminal 2', type='TERMINAL',
@@ -60,13 +61,16 @@ features = [
             adjacentEntityIds=['road-sahar-inbound', 'road-sahar-outbound', 'parking-t2-mlcp']),
     feature('terminal-t1', poly(ring('61569813')), name='Terminal 1', type='TERMINAL',
             geometrySource='OpenStreetMap way 61569813 (aeroway=terminal)', heightM=22,
-            adjacentEntityIds=[]),
+            adjacentEntityIds=['road-t1-access']),
     feature('road-sahar-inbound', line(chain(inbound)), name='Sahar Elevated Access Road — to T2', type='ROAD',
             direction='Inbound (WEH → T2 departures/arrivals)', segmentId='SAHAR-EL-IN-01',
             geometrySource='OpenStreetMap ways ' + ', '.join(inbound), adjacentEntityIds=['terminal-t2']),
     feature('road-sahar-outbound', line(chain(outbound)), name='Sahar Elevated Access Road — from T2', type='ROAD',
             direction='Outbound (T2 → WEH)', segmentId='SAHAR-EL-OUT-01',
             geometrySource='OpenStreetMap ways ' + ', '.join(outbound), adjacentEntityIds=['terminal-t2']),
+    feature('road-t1-access', line(chain(t1_access)), name='Nehru Road — T1 approach', type='ROAD',
+            direction='One-way towards the T1 forecourt (Air Port Road loop)', segmentId='NEHRU-T1-01',
+            geometrySource='OpenStreetMap ways ' + ', '.join(t1_access), adjacentEntityIds=['terminal-t1']),
     feature('runway-09-27', poly(r0927), name='Runway 09/27', type='RUNWAY', designator='09/27',
             lengthM=len0927, widthM=60, geometrySource='OpenStreetMap runway centreline (ways 510399291…880517046), buffered to 60 m'),
     feature('runway-14-32', poly(r1432), name='Runway 14/32', type='RUNWAY', designator='14/32',

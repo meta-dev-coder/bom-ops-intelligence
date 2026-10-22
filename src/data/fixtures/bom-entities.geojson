@@ -682,7 +682,9 @@
     "type": "TERMINAL",
     "geometrySource": "OpenStreetMap way 61569813 (aeroway=terminal)",
     "heightM": 22,
-    "adjacentEntityIds": []
+    "adjacentEntityIds": [
+     "road-t1-access"
+    ]
    },
    "geometry": {
     "type": "Polygon",
@@ -1276,6 +1278,88 @@
      [
       72.8551471,
       19.1012845
+     ]
+    ]
+   }
+  },
+  {
+   "type": "Feature",
+   "id": "road-t1-access",
+   "properties": {
+    "id": "road-t1-access",
+    "geometryConfidence": "medium",
+    "reviewStatus": "UNREVIEWED \u2014 verify against imagery or authorized airport plans",
+    "name": "Nehru Road \u2014 T1 approach",
+    "type": "ROAD",
+    "direction": "One-way towards the T1 forecourt (Air Port Road loop)",
+    "segmentId": "NEHRU-T1-01",
+    "geometrySource": "OpenStreetMap ways 22860355, 22860195",
+    "adjacentEntityIds": [
+     "terminal-t1"
+    ]
+   },
+   "geometry": {
+    "type": "LineString",
+    "coordinates": [
+     [
+      72.8548803,
+      19.0945665
+     ],
+     [
+      72.8549874,
+      19.0948316
+     ],
+     [
+      72.8552097,
+      19.0952208
+     ],
+     [
+      72.8554912,
+      19.0956978
+     ],
+     [
+      72.8555506,
+      19.095762
+     ],
+     [
+      72.8553168,
+      19.0958873
+     ],
+     [
+      72.8548137,
+      19.0960615
+     ],
+     [
+      72.8543134,
+      19.0961917
+     ],
+     [
+      72.8542084,
+      19.0962178
+     ],
+     [
+      72.8541123,
+      19.0962418
+     ],
+     [
+      72.8539438,
+      19.0962816
+     ],
+     [
+      72.8536062,
+      19.0963556
+     ],
+     [
+      72.8535337,
+      19.0963711
+     ],
+     [
+      72.8532984,
+      19.0964215
+     ],
+     [
+      72.8531244,
+      19.0964588
      ]
     ]
    }

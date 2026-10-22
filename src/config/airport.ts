@@ -11,6 +11,7 @@ export const AIRPORT = {
 export const ION_ASSETS = {
   worldTerrain: 1,
   osmBuildings: 96188,
-  googleSatelliteLabels: Number(import.meta.env.VITE_ION_IMAGERY_ASSET_ID ?? 3830186),
+  // 3830183 = Google 2D "Satellite with labels" (verified by screenshot; 3830184-6 are road/label/contour styles).
+  googleSatelliteLabels: Number(import.meta.env.VITE_ION_IMAGERY_ASSET_ID ?? 3830183),
   googlePhotorealistic: 2275207,
 };

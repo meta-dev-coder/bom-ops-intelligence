@@ -1,5 +1,5 @@
 import { num } from '../app/format';
-import { ROAD_COLORS } from '../map/AirportLayers';
+import { ROAD_COLORS } from '../map/colors';
 import { useApp } from '../state/store';
 import type { DataEnvelope, RoadStatus, TrafficSegment } from '../types/telemetry';
 import { Section } from './Panel';

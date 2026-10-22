@@ -9,16 +9,13 @@ import {
   CustomDataSource, DistanceDisplayCondition, Entity, HeightReference, JulianDate, LabelStyle,
   PolygonHierarchy, VerticalOrigin, type Viewer,
 } from 'cesium';
-import type { AirportEntity, EntityType } from '../types/entities';
+import type { AirportEntity } from '../types/entities';
 import type { RoadStatus } from '../types/telemetry';
+import { HAZARD_COLOR, ROAD_COLORS, TYPE_COLORS } from './colors';
 import { ENTITIES } from './EntityRegistry';
 
-export const ROAD_COLORS: Record<RoadStatus, string> = {
-  FREE_FLOW: '#22c55e', MODERATE: '#eab308', HEAVY: '#f97316', SEVERE: '#ef4444', BLOCKED: '#dc2626',
-};
-export const TYPE_COLORS: Record<EntityType, string> = {
-  TERMINAL: '#22d3ee', RUNWAY: '#e2e8f0', PARKING: '#a78bfa', FACILITY: '#2dd4bf', ROAD: '#94a3b8',
-};
+export { ROAD_COLORS, TYPE_COLORS };
+
 const SELECTED = Color.fromCssColorString('#f8fafc');
 const PULSE = Color.fromCssColorString('#f59e0b');
 
@@ -27,11 +24,13 @@ export interface StyleInput {
   hoveredId: string | null;
   roadStatus: Record<string, RoadStatus>;
   pulseId: string | null;
+  /** Roads currently BLOCKED/SEVERE → hazard marker; label says whether it is simulated. */
+  hazards: Record<string, 'SIMULATED' | 'REPORTED'>;
   reducedMotion: boolean;
   visible: { roads: boolean; facilities: boolean; runways: boolean };
 }
 
-interface Parts { def: AirportEntity; fill?: Entity; outline: Entity; casing?: Entity; label: Entity }
+interface Parts { def: AirportEntity; fill?: Entity; outline: Entity; casing?: Entity; label: Entity; hazard?: Entity }
 
 const toPositions = (coords: number[][]) => coords.map(([lon, lat]) => Cartesian3.fromDegrees(lon, lat));
 
@@ -105,7 +104,26 @@ export function installAirportLayers(viewer: Viewer) {
         backgroundPadding: new Cartesian2(6, 3),
       },
     });
-    for (const e of [p.fill, p.outline, p.casing, p.label]) if (e) pickIds.set(e, def.id);
+    if (def.type === 'ROAD') {
+      // Simulated hazard area (spec §4.2 legend): ring + warning label at the segment's middle.
+      p.hazard = ds.entities.add({
+        id: `${def.id}:hazard`,
+        show: false,
+        position: Cartesian3.fromDegrees(lon, lat),
+        ellipse: {
+          semiMajorAxis: 180, semiMinorAxis: 180,
+          material: Color.fromCssColorString(HAZARD_COLOR).withAlpha(0.18),
+          classificationType: ClassificationType.BOTH,
+        },
+        label: {
+          text: '⚠ SIMULATED BLOCKAGE', font: '700 12px Inter, system-ui, sans-serif',
+          fillColor: Color.WHITE, showBackground: true, backgroundColor: Color.fromCssColorString(HAZARD_COLOR).withAlpha(0.9),
+          backgroundPadding: new Cartesian2(7, 4), verticalOrigin: VerticalOrigin.BOTTOM, pixelOffset: new Cartesian2(0, -30),
+          heightReference: HeightReference.CLAMP_TO_GROUND, disableDepthTestDistance: Number.POSITIVE_INFINITY,
+        },
+      });
+    }
+    for (const e of [p.fill, p.outline, p.casing, p.label, p.hazard]) if (e) pickIds.set(e, def.id);
     parts.set(def.id, p as Parts);
   }
 
@@ -132,11 +150,16 @@ export function installAirportLayers(viewer: Viewer) {
       const hovered = s.hoveredId === id;
       const pulsing = s.pulseId === id;
       const status = def.type === 'ROAD' ? s.roadStatus[id] ?? 'MODERATE' : '';
-      const key = `${layerVisible}|${selected}|${hovered}|${pulsing}|${status}`;
+      const hazard = s.hazards[id];
+      const key = `${layerVisible}|${selected}|${hovered}|${pulsing}|${status}|${hazard ?? ''}`;
       if (applied.get(id) === key) continue;
       applied.set(id, key);
       changed = true;
       for (const e of [p.fill, p.outline, p.casing, p.label]) if (e) e.show = layerVisible;
+      if (p.hazard) {
+        p.hazard.show = layerVisible && Boolean(hazard);
+        if (hazard) p.hazard.label!.text = new ConstantProperty(hazard === 'SIMULATED' ? '⚠ SIMULATED BLOCKAGE' : '⚠ REPORTED SEVERE CONGESTION');
+      }
       if (def.type === 'ROAD') {
         p.outline.polyline!.material = material(Color.fromCssColorString(ROAD_COLORS[status as RoadStatus]));
         p.outline.polyline!.width = new ConstantProperty(selected ? 10 : hovered ? 9 : 7);
