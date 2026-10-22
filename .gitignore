@@ -1,0 +1,6 @@
+.env.local
+.env.*.local
+token
+node_modules/
+dist/
+tools/.osm_cache.json

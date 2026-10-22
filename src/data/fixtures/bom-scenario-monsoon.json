@@ -1,0 +1,27 @@
+{
+  "id": "scenario-a-monsoon-sahar",
+  "name": "Monsoon squall + Sahar access-road blockage",
+  "version": "1.0.0",
+  "baselineFixtureId": "bom-baseline-evening-peak-v1",
+  "enabled": true,
+  "targetEntityId": "terminal-t2",
+  "roadEntityId": "road-sahar-inbound",
+  "scenarioTime": "2026-10-21T18:32:00+05:30",
+  "stepDurationMs": 900,
+  "steps": [
+    { "id": "weather", "label": "Weather", "description": "Scripted squall: rainfall set to 50 mm/h.",
+      "weather": { "precipitationMmPerHour": 50, "condition": "Heavy rain — monsoon squall (scripted)", "windSpeedKmh": 46, "windDirectionDeg": 250, "temperatureC": 25 } },
+    { "id": "traffic", "label": "Traffic", "description": "Configured Sahar inbound segment set to 5 km/h, BLOCKED.",
+      "traffic": { "road-sahar-inbound": { "currentSpeedKmh": 5, "status": "BLOCKED" } } },
+    { "id": "demand", "label": "Demand", "description": "Synthetic T2 arrivals in the next 30 min: 4 widebody flights, ~1,200 assumed passengers.",
+      "cabStagingOccupied": { "terminal-t2": 188 } },
+    { "id": "impact", "label": "Impact", "description": "Demand-pressure model re-run with the simulated road and weather capacity factors." },
+    { "id": "recommendation", "label": "Recommendation", "description": "Thresholds evaluated; structured recommendation raised for operator review." }
+  ],
+  "assumptions": [
+    "Rainfall (50 mm/h) and road speed (5 km/h) are scripted inputs, not a forecast or observed closure.",
+    "Passenger counts are synthetic: seats × assumed load factor for demo flights.",
+    "Vehicle split, passengers per vehicle, forecourt capacity and capacity factors are illustrative configuration.",
+    "No actual road closure, queue time or capacity breach is asserted."
+  ]
+}

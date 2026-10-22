@@ -1,0 +1,36 @@
+{
+  "name": "bom-ops-intelligence-poc",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Mumbai Airport (BOM) Operations Intelligence PoC — CesiumJS command centre with a deterministic disruption scenario.",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "cesium": "^1.146.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/node": "^22.20.5",
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.8",
+    "vite": "^6.4.5",
+    "vite-plugin-static-copy": "^3.4.0",
+    "vitest": "^3.2.7"
+  }
+}

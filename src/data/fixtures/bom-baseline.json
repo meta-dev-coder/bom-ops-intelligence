@@ -1,0 +1,224 @@
+{
+  "fixtureId": "bom-baseline-evening-peak-v1",
+  "sourceLabel": "MockDataService \u2014 synthetic evening-peak slice",
+  "windowStart": "2026-10-21T18:30:00+05:30",
+  "windowMinutes": 15,
+  "note": "All values are synthetic demo data. Not airport telemetry, not an actual schedule.",
+  "weather": {
+    "temperatureC": 29,
+    "windSpeedKmh": 14,
+    "windDirectionDeg": 240,
+    "precipitationMmPerHour": 0,
+    "condition": "Partly cloudy",
+    "kind": "FIXTURE"
+  },
+  "traffic": [
+    {
+      "id": "road-sahar-inbound",
+      "name": "Sahar Elevated Access Road \u2014 to T2",
+      "currentSpeedKmh": 32,
+      "freeFlowSpeedKmh": 45,
+      "status": "MODERATE",
+      "lengthM": 2390
+    },
+    {
+      "id": "road-sahar-outbound",
+      "name": "Sahar Elevated Access Road \u2014 from T2",
+      "currentSpeedKmh": 39,
+      "freeFlowSpeedKmh": 45,
+      "status": "FREE_FLOW",
+      "lengthM": 2179
+    }
+  ],
+  "flights": [
+    {
+      "id": "f1",
+      "flightNumber": "DEMO 101",
+      "origin": "DXB",
+      "terminalId": "terminal-t2",
+      "aircraftCategory": "WIDEBODY",
+      "etaOffsetMinutes": 4,
+      "seatsAssumed": 380,
+      "loadFactorAssumed": 0.8
+    },
+    {
+      "id": "f2",
+      "flightNumber": "DEMO 117",
+      "origin": "LHR",
+      "terminalId": "terminal-t2",
+      "aircraftCategory": "WIDEBODY",
+      "etaOffsetMinutes": 11,
+      "seatsAssumed": 375,
+      "loadFactorAssumed": 0.8
+    },
+    {
+      "id": "f3",
+      "flightNumber": "DEMO 122",
+      "origin": "SIN",
+      "terminalId": "terminal-t2",
+      "aircraftCategory": "WIDEBODY",
+      "etaOffsetMinutes": 19,
+      "seatsAssumed": 370,
+      "loadFactorAssumed": 0.8
+    },
+    {
+      "id": "f4",
+      "flightNumber": "DEMO 138",
+      "origin": "FRA",
+      "terminalId": "terminal-t2",
+      "aircraftCategory": "WIDEBODY",
+      "etaOffsetMinutes": 27,
+      "seatsAssumed": 375,
+      "loadFactorAssumed": 0.8
+    },
+    {
+      "id": "f5",
+      "flightNumber": "DEMO 204",
+      "origin": "DEL",
+      "terminalId": "terminal-t1",
+      "aircraftCategory": "NARROWBODY",
+      "etaOffsetMinutes": 7,
+      "seatsAssumed": 186,
+      "loadFactorAssumed": 0.85
+    },
+    {
+      "id": "f6",
+      "flightNumber": "DEMO 211",
+      "origin": "BLR",
+      "terminalId": "terminal-t1",
+      "aircraftCategory": "NARROWBODY",
+      "etaOffsetMinutes": 16,
+      "seatsAssumed": 180,
+      "loadFactorAssumed": 0.85
+    },
+    {
+      "id": "f7",
+      "flightNumber": "DEMO 233",
+      "origin": "GOI",
+      "terminalId": "terminal-t1",
+      "aircraftCategory": "REGIONAL",
+      "etaOffsetMinutes": 24,
+      "seatsAssumed": 78,
+      "loadFactorAssumed": 0.8
+    },
+    {
+      "id": "f8",
+      "flightNumber": "DEMO 152",
+      "origin": "MAA",
+      "terminalId": "terminal-t2",
+      "aircraftCategory": "NARROWBODY",
+      "etaOffsetMinutes": 36,
+      "seatsAssumed": 186,
+      "loadFactorAssumed": 0.85
+    },
+    {
+      "id": "f9",
+      "flightNumber": "DEMO 245",
+      "origin": "HYD",
+      "terminalId": "terminal-t1",
+      "aircraftCategory": "NARROWBODY",
+      "etaOffsetMinutes": 41,
+      "seatsAssumed": 180,
+      "loadFactorAssumed": 0.85
+    }
+  ],
+  "terminals": {
+    "terminal-t2": {
+      "roadEntityId": "road-sahar-inbound",
+      "departingDropoffVehicles": 160,
+      "cabStaging": {
+        "occupied": 120,
+        "capacity": 200
+      }
+    },
+    "terminal-t1": {
+      "roadEntityId": null,
+      "departingDropoffVehicles": 70,
+      "cabStaging": {
+        "occupied": 64,
+        "capacity": 120
+      },
+      "apronStands": {
+        "occupied": 31,
+        "total": 46
+      }
+    }
+  },
+  "parking": {
+    "parking-t2-mlcp": {
+      "occupied": 2650,
+      "capacityAssumed": 4000
+    }
+  },
+  "facilities": {
+    "facility-ga-terminal": {
+      "status": "Operational (configured demo status)"
+    }
+  },
+  "aircraft": [
+    {
+      "id": "ac1",
+      "callsign": "DEMO101",
+      "category": "WIDEBODY",
+      "kind": "ARRIVAL",
+      "runway": "27",
+      "startOffsetS": 0
+    },
+    {
+      "id": "ac2",
+      "callsign": "DEMO204",
+      "category": "NARROWBODY",
+      "kind": "ARRIVAL",
+      "runway": "27",
+      "startOffsetS": 150
+    },
+    {
+      "id": "ac3",
+      "callsign": "DEMO117",
+      "category": "WIDEBODY",
+      "kind": "ARRIVAL",
+      "runway": "27",
+      "startOffsetS": 330
+    },
+    {
+      "id": "ac4",
+      "callsign": "DEMO211",
+      "category": "NARROWBODY",
+      "kind": "ARRIVAL",
+      "runway": "27",
+      "startOffsetS": 520
+    },
+    {
+      "id": "ac5",
+      "callsign": "DEMO122",
+      "category": "WIDEBODY",
+      "kind": "ARRIVAL",
+      "runway": "27",
+      "startOffsetS": 700
+    },
+    {
+      "id": "ac6",
+      "callsign": "DEMO810",
+      "category": "NARROWBODY",
+      "kind": "DEPARTURE",
+      "runway": "27",
+      "startOffsetS": 60
+    },
+    {
+      "id": "ac7",
+      "callsign": "DEMO822",
+      "category": "WIDEBODY",
+      "kind": "DEPARTURE",
+      "runway": "27",
+      "startOffsetS": 420
+    },
+    {
+      "id": "ac8",
+      "callsign": "DEMO835",
+      "category": "NARROWBODY",
+      "kind": "DEPARTURE",
+      "runway": "27",
+      "startOffsetS": 760
+    }
+  ]
+}
